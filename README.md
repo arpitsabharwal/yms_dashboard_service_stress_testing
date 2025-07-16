@@ -1,348 +1,430 @@
-# YMS Dashboard JMeter Testing Framework
+# YMS Dashboard Stress Testing - Execution Guide
 
-A comprehensive JMeter-based performance testing framework for the YMS Dashboard Service APIs with multi-tenant support.
+This guide provides step-by-step instructions for preparing test data and executing different types of stress tests for the YMS Dashboard Service.
 
-## Features
-
-- **Multi-tenant Support**: Test multiple tenants simultaneously with different RPM configurations
-- **10 API Endpoints**: Complete coverage of all YMS Dashboard Service APIs
-- **Dynamic Payload Generation**: Groovy scripts generate realistic test data
-- **Flexible Load Distribution**: Configure load distribution across facilities and APIs
-- **Multiple Test Profiles**: Smoke, load, and stress test configurations
-- **Distributed Testing**: Support for distributed load generation
-- **Real-time Monitoring**: Integration with InfluxDB/Grafana for live metrics
-- **Comprehensive Reporting**: HTML reports with detailed performance metrics
+## Table of Contents
+- [Prerequisites](#prerequisites)
+- [Initial Setup](#initial-setup)
+- [Test Data Preparation](#test-data-preparation)
+- [Test Execution](#test-execution)
+- [Viewing Results](#viewing-results)
+- [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
-- Java 8 or higher
-- Apache JMeter 5.0 or higher
-- Bash shell (for Linux/Mac) or Git Bash (for Windows)
-- Optional: InfluxDB and Grafana for real-time monitoring
+Before running tests, ensure you have:
+- Java 11+ installed
+- Python 3.8+ installed
+- JMeter 5.6.2 installed
+- Network access to YMS Dashboard Service
+- Valid authentication tokens for tenants
 
-## Quick Start
+## Initial Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd jmeter-yms-dashboard-test
-   ```
+### 1. Clone and Setup Repository
 
-2. **Run setup script**
-   ```bash
-   chmod +x scripts/*.sh
-   ./scripts/setup.sh
-   ```
+```bash
+# Clone the repository
+git clone <repository-url>
+cd yms-stress-testing-framework
 
-3. **Configure test data**
-   - Edit `data/tenants.csv` with your tenant information
-   - Update `data/facilities.csv` with facility mappings
-   - Add authentication tokens to `data/tenants.csv`
+# Make scripts executable
+chmod +x scripts/*.sh
 
-4. **Run a smoke test**
-   ```bash
-   ./scripts/run-test.sh --profile smoke-test --base-url http://your-api-url
-   ```
-
-## Project Structure
-
-```
-jmeter-yms-dashboard-test/
-├── test-plans/           # JMeter test plans
-├── data/                 # Test data files
-├── scripts/              # Execution and utility scripts
-├── config/               # Configuration files
-├── results/              # Test results (created at runtime)
-└── reports/              # HTML reports (created at runtime)
+# Create necessary directories
+mkdir -p logs/jmeter logs/python reports/html reports/csv reports/summary results test-data
 ```
 
-## Configuration
+### 2. Install Dependencies
 
-### Tenant Configuration (data/tenants.csv)
+```bash
+# Install Python dependencies
+cd python
+pip install -r requirements.txt
+cd ..
+
+# Verify installation
+python -m pytest python/tests/ -v
+```
+
+### 3. Configure JMeter
+
+```bash
+# Set JMETER_HOME environment variable
+export JMETER_HOME=/path/to/apache-jmeter-5.6.2
+
+# Add to your shell profile (.bashrc, .zshrc, etc.)
+echo 'export JMETER_HOME=/path/to/apache-jmeter-5.6.2' >> ~/.zshrc
+echo 'export PATH=$JMETER_HOME/bin:$PATH' >> ~/.zshrc
+source ~/.zshrc
+
+# Verify JMeter installation
+jmeter -v
+```
+
+## Test Data Preparation
+
+### 1. Configure Tenants
+
+Edit `python/config/tenant_config.yaml` with your actual tenant data:
+
+```yaml
+tenants:
+  your-tenant-name:
+    name: "your-tenant-name"
+    rpm_config:
+      yard-availability: 100
+      trailer-overview: 150
+      trailer-exception-summary: 80
+      # ... configure RPM for each endpoint
+    data_pool:
+      facility_ids: [1001, 1002, 1003, 1004, 1005]  # Your actual facility IDs
+      carrier_ids: [2001, 2002, 2003, 2004]         # Your actual carrier IDs
+      user_ids: [3001, 3002, 3003]                  # Your actual user IDs
+      saved_filter_ids: [4001, 4002, 4003]          # Your actual filter IDs
+    auth:
+      token: "Bearer eyJhbGciOiJIU..."              # Your actual JWT token
+    sla:
+      response_time_ms: 2000
+      error_rate_percent: 1
+```
+
+### 2. Update CSV Data File
+
+Edit `jmeter/data/tenant-data.csv` with tenant credentials:
 
 ```csv
-tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds
-TENANT_A,Customer Alpha,1200,Bearer <token>,300
-TENANT_B,Customer Beta,800,Bearer <token>,180
+tenant_name,auth_token
+your-tenant-name,"Bearer eyJhbGciOiJIU..."
+tenant-prod-1,"Bearer eyJhbGciOiJIU..."
+tenant-prod-2,"Bearer eyJhbGciOiJIU..."
 ```
 
-- `tenant_id`: Unique identifier for the tenant
-- `tenant_name`: Human-readable tenant name
-- `target_rpm`: Target requests per minute for this tenant
-- `auth_token`: Bearer token for authentication
-- `ramp_up_seconds`: Time to reach target load
+### 3. Generate Sample Payloads
 
-### Facility Distribution (data/facilities.csv)
-
-```csv
-tenant_id,facility_id,facility_name,load_weight,carrier_ids
-TENANT_A,101,DC West,0.6,"201,202,203"
-TENANT_A,102,DC East,0.4,"204,205"
-```
-
-- `load_weight`: Percentage of tenant load for this facility (0.0-1.0)
-- `carrier_ids`: Comma-separated list of carrier IDs
-
-### API Mix Configuration
-
-The default API distribution is:
-- yard-availability: 15%
-- trailer-overview: 20%
-- trailer-exception-summary: 10%
-- task-workload-summary: 10%
-- task-attention-summary: 5%
-- site-occupancy: 15%
-- shipment-volume-forecast: 10%
-- dwell-time-summary: 5%
-- door-breakdown-summary: 5%
-- detention-summary: 5%
-
-## Running Tests
-
-### Basic Test Execution
+Generate and verify payloads for all endpoints:
 
 ```bash
-# Run with default settings
-./scripts/run-test.sh
+# Generate payloads for a specific tenant
+./scripts/generate-all-payloads.sh your-tenant-name
 
-# Specify base URL and duration
-./scripts/run-test.sh --base-url https://api.example.com --duration 3600
+# Verify generated payloads
+ls -la test-data/
 
-# Test specific tenants
-./scripts/run-test.sh --tenants TENANT_A,TENANT_B
-
-# Use a test profile
-./scripts/run-test.sh --profile load-test
-
-# Increase load by 50%
-./scripts/run-test.sh --rpm-multiplier 1.5
+# View a sample payload
+cat test-data/your-tenant-name_yard-availability.json | jq .
 ```
 
-### Test Profiles
+### 4. Test Individual Endpoints
 
-1. **Smoke Test** (`--profile smoke-test`)
-   - Duration: 5 minutes
-   - Load: 10% of configured RPM
-   - Purpose: Quick validation
-
-2. **Load Test** (`--profile load-test`)
-   - Duration: 1 hour
-   - Load: 100% of configured RPM
-   - Purpose: Standard performance testing
-
-3. **Stress Test** (`--profile stress-test`)
-   - Duration: 2 hours
-   - Load: 150% of configured RPM
-   - Purpose: Find system limits
-
-### Excluding APIs
-
-To exclude specific APIs from a test run:
+Test payload generation for specific endpoints:
 
 ```bash
-./scripts/run-test.sh --exclude-apis "yard-availability,trailer-overview"
+cd python
+
+# Generate single payload
+python -m cli generate --tenant your-tenant-name --endpoint yard-availability
+
+# Generate multiple payloads
+python -m cli generate --tenant your-tenant-name --endpoint trailer-overview --count 5
+
+# Save to file
+python -m cli generate --tenant your-tenant-name --endpoint site-occupancy --count 10 --output-file ../test-data/site-occupancy-test.json
+
+cd ..
 ```
 
-### Dry Run
+## Test Execution
 
-Validate configuration without running tests:
+### 1. Smoke Test (Quick Validation)
+
+**Purpose**: Validate all endpoints are working correctly with minimal load
 
 ```bash
-./scripts/run-test.sh --dry-run --tenants TENANT_A
+# Run 5-minute smoke test
+./scripts/run-local.sh --tenant your-tenant-name --scenario smoke_test --duration 300
+
+# Expected output:
+# - Total requests: ~500-1000
+# - Error rate: < 0.1%
+# - Response time: < 500ms
 ```
 
-## Distributed Testing
+### 2. Load Test (Normal Capacity)
 
-### Setup Slave Machines
-
-1. Install JMeter on all slave machines
-2. Ensure network connectivity between master and slaves
-3. Configure firewall rules for RMI communication
-
-### Start Slave Servers
+**Purpose**: Test system under expected normal load
 
 ```bash
-./scripts/run-distributed.sh --slaves slave1,slave2,slave3 --start-slaves
+# Run 1-hour load test
+./scripts/run-local.sh --tenant your-tenant-name --scenario load_test --duration 3600
+
+# For shorter test (15 minutes)
+./scripts/run-local.sh --tenant your-tenant-name --scenario load_test --duration 900
+
+# Expected output:
+# - Sustained target RPM
+# - Error rate: < 1%
+# - P95 response time: < 2000ms
 ```
 
-### Run Distributed Test
+### 3. Stress Test (Peak Load)
+
+**Purpose**: Find system breaking point
 
 ```bash
-./scripts/run-distributed.sh \
-  --slaves slave1,slave2,slave3 \
-  --base-url https://api.example.com \
-  --duration 3600 \
-  --profile load-test
+# Run 30-minute stress test (150% load)
+./scripts/run-local.sh --tenant your-tenant-name --scenario stress_test --duration 1800
+
+# Monitor system resources during test
+# Watch for:
+# - Increased error rates
+# - Response time degradation
+# - System resource exhaustion
 ```
 
-### Check Slave Status
+### 4. Endurance Test (Soak Test)
+
+**Purpose**: Detect memory leaks and performance degradation over time
 
 ```bash
-./scripts/run-distributed.sh --slaves slave1,slave2,slave3 --check-slaves
+# Run 4-hour endurance test (80% load)
+./scripts/run-local.sh --tenant your-tenant-name --scenario endurance_test --duration 14400
+
+# For shorter test (2 hours)
+./scripts/run-local.sh --tenant your-tenant-name --scenario endurance_test --duration 7200
 ```
 
-## Adding New Tenants
+### 5. Spike Test (Sudden Load)
 
-1. Add tenant to `data/tenants.csv`:
-   ```csv
-   TENANT_D,Customer Delta,1000,Bearer <token>,240
-   ```
+**Purpose**: Test system behavior under sudden load increase
 
-2. Add facilities for the tenant in `data/facilities.csv`:
-   ```csv
-   TENANT_D,401,Warehouse A,0.7,"501,502,503"
-   TENANT_D,402,Warehouse B,0.3,"504,505"
-   ```
-
-3. Ensure total `load_weight` for each tenant equals 1.0
-
-## Modifying RPM Settings
-
-### Global RPM Adjustment
-
-Use the `--rpm-multiplier` flag:
 ```bash
-# 50% of configured load
-./scripts/run-test.sh --rpm-multiplier 0.5
-
-# 200% of configured load
-./scripts/run-test.sh --rpm-multiplier 2.0
+# Run 20-minute spike test (200% load with 5-second ramp-up)
+./scripts/run-local.sh --tenant your-tenant-name --scenario spike_test --duration 1200
 ```
 
-### Per-Tenant RPM
+### 6. Multi-Tenant Test
 
-Edit `data/tenants.csv` and modify the `target_rpm` column.
+**Purpose**: Test multiple tenants simultaneously
 
-### API Mix Adjustment
+```bash
+# First, ensure all tenants are configured in tenant_config.yaml
 
-Modify the throughput percentages in `test-plans/yms-dashboard-main.jmx`:
-```xml
-<FloatProperty>
-  <n>ThroughputController.percentThroughput</n>
-  <value>15.0</value>  <!-- Change this value -->
-</FloatProperty>
+# Run distributed test with multiple tenants
+./scripts/run-distributed.sh --tenants "tenant-1,tenant-2,tenant-3" --scenario load_test
+
+# Note: Requires JMeter distributed setup
 ```
 
-## Monitoring and Reporting
+### 7. Custom Test Parameters
 
-### Real-time Monitoring with InfluxDB
+Run tests with custom parameters:
 
-1. Install and start InfluxDB:
-   ```bash
-   docker run -p 8086:8086 influxdb:1.8
-   ```
+```bash
+# Custom duration
+./scripts/run-local.sh --tenant your-tenant-name --scenario load_test --duration 600
 
-2. Create database:
-   ```bash
-   curl -XPOST 'http://localhost:8086/query' --data-urlencode "q=CREATE DATABASE jmeter"
-   ```
-
-3. Configure JMeter backend listener (already configured in test plan)
-
-4. View metrics in InfluxDB or connect Grafana
-
-### HTML Reports
-
-Reports are automatically generated after each test run:
-```
-reports/<report-name>/index.html
+# Run with specific JMeter properties
+jmeter -n -t jmeter/test-plans/YMS-Dashboard-Master-Test.jmx \
+  -Jbase.url=https://staging.example.com \
+  -Jtenant=your-tenant-name \
+  -Jthreads=50 \
+  -Jduration=900 \
+  -Jrampup=60 \
+  -l results/custom_test.jtl
 ```
 
-### Custom Reporting
+## Viewing Results
 
-Access raw results for custom analysis:
+### 1. JMeter HTML Report
+
+After each test, an HTML report is automatically generated:
+
+```bash
+# Open the latest test report
+open results/*/html-report/index.html
+
+# Or navigate to specific test
+open results/20240115_143022/html-report/index.html
 ```
-results/<report-name>/results.jtl
+
+### 2. Generate Custom Reports
+
+Generate detailed reports from JTL files:
+
+```bash
+cd python
+
+# Generate reports for completed test
+python -m cli report \
+  --jtl-file ../results/20240115_143022/results.jtl \
+  --tenant your-tenant-name \
+  --test-name load_test
+
+cd ..
+
+# View generated reports
+open reports/html/*.html
+cat reports/csv/*.csv
+cat reports/summary/*.json | jq .
 ```
+
+### 3. Analyze Multiple Test Results
+
+Compare results across multiple test runs:
+
+```bash
+# Run analysis script
+python scripts/analyze-results.py reports/
+
+# This will show:
+# - Tenant performance comparison
+# - Endpoint performance trends
+# - Error rate patterns
+```
+
+### 4. Real-time Monitoring
+
+Monitor test execution in real-time:
+
+```bash
+# Watch JMeter logs
+tail -f logs/jmeter/*.log
+
+# Filter for errors and warnings
+tail -f logs/jmeter/*.log | grep -E "(ERROR|WARN|SEVERE)"
+
+# Monitor response times
+tail -f results/*/results.jtl | awk -F',' '{print $2 "," $14}' | tail -20
+```
+
+## Test Scenarios Summary
+
+| Scenario | Duration | Load % | Ramp-up | Use Case |
+|----------|----------|--------|---------|----------|
+| Smoke Test | 5 min | 10% | 30s | Quick validation |
+| Load Test | 60 min | 100% | 5 min | Normal capacity |
+| Stress Test | 30 min | 150% | 3 min | Breaking point |
+| Endurance | 4 hours | 80% | 10 min | Memory leaks |
+| Spike Test | 20 min | 200% | 5s | Sudden load |
+
+## Interpreting Results
+
+### Key Metrics to Monitor
+
+1. **Response Time**
+   - Average: General performance indicator
+   - P90/P95/P99: Critical for SLA compliance
+   - Max: Worst-case scenarios
+
+2. **Throughput**
+   - Requests/second achieved vs. target
+   - Transactions per minute
+
+3. **Error Rate**
+   - Should be < 1% for load tests
+   - Track error types and patterns
+
+4. **Resource Utilization**
+   - JMeter client CPU/memory
+   - Network bandwidth
+
+### Success Criteria
+
+✅ **Smoke Test Pass**:
+- All endpoints return 200 OK
+- No errors in logs
+- Response times < 500ms
+
+✅ **Load Test Pass**:
+- Error rate < 1%
+- P95 response time < 2000ms
+- Sustained target throughput
+
+✅ **Stress Test Insights**:
+- Breaking point identified
+- Graceful degradation observed
+- Recovery after load reduction
 
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-1. **"JMeter not found"**
-   - Ensure JMeter is installed and in PATH
-   - Set JMETER_HOME environment variable
+#### 1. Permission Denied Error
+```bash
+# Fix: Make scripts executable
+chmod +x scripts/*.sh
+```
 
-2. **"Test plan not found"**
-   - Run setup.sh to create directory structure
-   - Check file paths in error message
+#### 2. JMeter Not Found
+```bash
+# Fix: Set JMETER_HOME
+export JMETER_HOME=/path/to/jmeter
+export PATH=$JMETER_HOME/bin:$PATH
+```
 
-3. **Authentication failures**
-   - Verify bearer tokens in tenants.csv
-   - Check token expiration
-   - Ensure tenant header is correct
+#### 3. Python Module Not Found
+```bash
+# Fix: Install dependencies
+cd python && pip install -r requirements.txt
+```
 
-4. **High error rate**
-   - Check server logs
-   - Reduce load with --rpm-multiplier
-   - Verify API endpoints are correct
+#### 4. Authentication Failures
+```bash
+# Fix: Update tenant tokens in config
+# Verify token format: "Bearer <token>"
+# Check token expiration
+```
 
-5. **Out of memory errors**
-   - Increase JMeter heap size in jmeter.properties
-   - Reduce thread count
-   - Disable response data saving
+#### 5. High Memory Usage
+```bash
+# Fix: Increase JMeter heap
+export HEAP="-Xms4g -Xmx4g"
+```
+
+#### 6. Connection Refused
+```bash
+# Fix: Verify target URL
+# Check network connectivity
+# Confirm service is running
+```
 
 ### Debug Mode
 
-Enable JMeter debug logging:
-```bash
-./scripts/run-test.sh --base-url http://localhost:5003 2>&1 | tee debug.log
-```
+Run tests in debug mode for troubleshooting:
 
-View JMeter logs:
 ```bash
-tail -f logs/jmeter_*.log
+# JMeter GUI mode
+jmeter -t jmeter/test-plans/YMS-Dashboard-Master-Test.jmx
+
+# Enable debug logging
+jmeter -n -t jmeter/test-plans/YMS-Dashboard-Master-Test.jmx \
+  -L DEBUG \
+  -Jlog_level.jmeter=DEBUG
+
+# Test payload generation
+cd python
+python -m cli generate --tenant your-tenant-name --endpoint yard-availability
 ```
 
 ## Best Practices
 
 1. **Start Small**: Always run smoke tests before full load tests
-2. **Monitor Resources**: Watch server CPU, memory, and network
-3. **Gradual Ramp-up**: Use appropriate ramp-up times
-4. **Data Variety**: Ensure test data has sufficient variety
-5. **Regular Baselines**: Establish performance baselines
-6. **Clean Test Data**: Reset test data between runs if needed
+2. **Monitor Resources**: Watch both client and server resources
+3. **Incremental Load**: Gradually increase load to find limits
+4. **Clean Environment**: Ensure clean test environment between runs
+5. **Document Results**: Keep records of all test configurations and results
+6. **Regular Testing**: Schedule periodic performance tests
 
-## Performance Tuning
+## Next Steps
 
-### JMeter Configuration
+1. Review generated reports and identify bottlenecks
+2. Share results with development team
+3. Create performance baselines
+4. Set up automated performance testing in CI/CD
+5. Monitor production performance metrics
 
-Edit `config/jmeter.properties`:
-```properties
-# Increase heap size
-HEAP=-Xms4g -Xmx8g
-
-# Reduce memory usage
-jmeter.save.saveservice.output_format=csv
-jmeter.save.saveservice.response_data=false
-jmeter.save.saveservice.samplerData=false
-```
-
-### OS Tuning (Linux)
-
-```bash
-# Increase file descriptors
-ulimit -n 65535
-
-# Tune network parameters
-sudo sysctl -w net.ipv4.tcp_tw_reuse=1
-sudo sysctl -w net.ipv4.ip_local_port_range="1024 65535"
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-[Your License Here]
-
-## Support
-
-For issues and questions:
-- Create an issue in the repository
-- Contact the team at: [support email] 
+For additional help, refer to:
+- [JMeter Documentation](https://jmeter.apache.org/usermanual/index.html)
+- [Project Wiki](./docs/)
+- [Issue Tracker](https://github.com/yourorg/yms-stress-testing/issues)
