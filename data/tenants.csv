@@ -1,0 +1,4 @@
+tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds
+TENANT_A,Customer Alpha,1200,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQSJ9.signature_a,300
+TENANT_B,Customer Beta,800,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQiJ9.signature_b,180
+TENANT_C,Customer Gamma,1500,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQyJ9.signature_c,360 

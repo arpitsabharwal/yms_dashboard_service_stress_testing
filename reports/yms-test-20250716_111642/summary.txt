@@ -1,0 +1,11 @@
+YMS Dashboard Load Test Summary
+===============================
+Test Name: yms-test-20250716_111642
+Start Time: timeStamp
+Base URL: http://localhost:5003/yms-dashboard-service/
+Duration: 300 seconds
+RPM Multiplier: 0.1
+
+Results Summary:
+---------------
+Total Samples: 

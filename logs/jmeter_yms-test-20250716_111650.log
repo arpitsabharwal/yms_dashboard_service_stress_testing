@@ -1,0 +1,271 @@
+2025-07-16 11:16:52,483 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2025-07-16 11:16:52,495 INFO o.a.j.JMeter: Loading user properties from: /opt/homebrew/Cellar/jmeter/5.6.3/libexec/bin/user.properties
+2025-07-16 11:16:52,495 INFO o.a.j.JMeter: Loading system properties from: /opt/homebrew/Cellar/jmeter/5.6.3/libexec/bin/system.properties
+2025-07-16 11:16:52,496 INFO o.a.j.JMeter: Setting JMeter property: base.url=http://localhost:5003/yms-dashboard-service/
+2025-07-16 11:16:52,496 INFO o.a.j.JMeter: Setting JMeter property: test.duration=300
+2025-07-16 11:16:52,496 INFO o.a.j.JMeter: Setting JMeter property: rpm.multiplier=0.1
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: Version 5.6.3
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: java.version=21.0.8
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: os.name=Mac OS X
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: os.arch=aarch64
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: os.version=15.5
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: file.encoding=UTF-8
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: java.awt.headless=true
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: Max memory     =1073741824
+2025-07-16 11:16:52,499 INFO o.a.j.JMeter: Available Processors =10
+2025-07-16 11:16:52,504 INFO o.a.j.JMeter: Default Locale=English (EN)
+2025-07-16 11:16:52,505 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2025-07-16 11:16:52,505 INFO o.a.j.JMeter: JMeterHome=/opt/homebrew/Cellar/jmeter/5.6.3/libexec
+2025-07-16 11:16:52,505 INFO o.a.j.JMeter: user.dir  =/Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test
+2025-07-16 11:16:52,505 INFO o.a.j.JMeter: PWD       =/Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test
+2025-07-16 11:16:52,507 INFO o.a.j.JMeter: IP: 192.168.1.9 Name: Arpit Sabharwal MacBookPro FullName: 192.168.1.9
+2025-07-16 11:16:52,514 INFO o.a.j.JMeter: Setting property 'jmeter.reportgenerator.outputdir' to:'/Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/reports/yms-test-20250716_111650'
+2025-07-16 11:16:52,516 INFO o.a.j.s.FileServer: Default base='/Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test'
+2025-07-16 11:16:52,516 INFO o.a.j.s.FileServer: Set new base='/Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans'
+2025-07-16 11:16:52,635 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2025-07-16 11:16:52,659 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2025-07-16 11:16:52,661 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2025-07-16 11:16:52,662 INFO o.a.j.s.SaveService: Loading file: test-plans/yms-dashboard-main.jmx
+2025-07-16 11:16:52,715 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
+2025-07-16 11:16:52,715 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
+2025-07-16 11:16:52,715 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
+2025-07-16 11:16:52,715 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
+2025-07-16 11:16:52,728 INFO o.a.j.c.IncludeController: loadIncludedElements -- try to load included module: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,728 INFO o.a.j.c.IncludeController: loadIncludedElements -failed for: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,728 INFO o.a.j.c.IncludeController: loadIncludedElements -Attempting to read it from: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,728 INFO o.a.j.s.SaveService: Loading file: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2025-07-16 11:16:52,742 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2025-07-16 11:16:52,746 INFO o.a.j.c.IncludeController: loadIncludedElements -- try to load included module: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,746 INFO o.a.j.c.IncludeController: loadIncludedElements -failed for: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,747 INFO o.a.j.c.IncludeController: loadIncludedElements -Attempting to read it from: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,747 INFO o.a.j.s.SaveService: Loading file: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,748 INFO o.a.j.c.IncludeController: loadIncludedElements -- try to load included module: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,748 INFO o.a.j.c.IncludeController: loadIncludedElements -failed for: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,748 INFO o.a.j.c.IncludeController: loadIncludedElements -Attempting to read it from: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,748 INFO o.a.j.s.SaveService: Loading file: /Users/arpit.sabharwal/Documents/dashboard_stress_testing/jmeter-yms-dashboard-test/test-plans/api-fragments/yard-availability.jmx
+2025-07-16 11:16:52,750 INFO o.a.j.JMeter: Creating summariser <summary>
+2025-07-16 11:16:52,752 INFO o.a.j.r.d.ReportGenerator: ReportGenerator will use for Parsing the separator: ','
+2025-07-16 11:16:52,752 INFO o.a.j.r.d.ReportGenerator: Will generate report at end of test from  results file: results/yms-test-20250716_111650/results.jtl
+2025-07-16 11:16:52,752 INFO o.a.j.r.d.ReportGenerator: Reading report generator properties from: /opt/homebrew/Cellar/jmeter/5.6.3/libexec/bin/reportgenerator.properties
+2025-07-16 11:16:52,752 INFO o.a.j.r.d.ReportGenerator: Merging with JMeter properties
+2025-07-16 11:16:52,754 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.temp_dir' not found, using default value 'temp' instead.
+2025-07-16 11:16:52,755 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.apdex_per_transaction' not found, using default value 'null' instead.
+2025-07-16 11:16:52,755 INFO o.a.j.r.c.ReportGeneratorConfiguration: apdex_per_transaction is empty, not APDEX per transaction customization
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.sample_filter' not found, using default value 'null' instead.
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.report_title' not found, using default value 'null' instead.
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.start_date' not found, using default value 'null' instead.
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.end_date' not found, using default value 'null' instead.
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.date_format' not found, using default value 'null' instead.
+2025-07-16 11:16:52,756 INFO o.a.j.r.c.ReportGeneratorConfiguration: Will use date range start date: null, end date: null
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.totalTPS.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.activeThreadsOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.timeVsThreads.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimeDistribution.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.transactionsPerSecond.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentiles.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,758 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentilesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.connectTimeOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.latenciesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.filters_only_sample_series' not found, using default value 'true' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.series_filter' not found, using default value '' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.show_controllers_only' not found, using default value 'false' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.filters_only_sample_series' not found, using default value 'true' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.series_filter' not found, using default value '' instead.
+2025-07-16 11:16:52,759 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.show_controllers_only' not found, using default value 'false' instead.
+2025-07-16 11:16:52,765 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2025-07-16 11:16:52,766 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-07-16 11:16:52,766 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-07-16 11:16:52,768 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2025-07-16 11:16:52,768 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2025-07-16 11:16:52,786 INFO o.a.j.r.ClassFinder: Will scan jar /opt/homebrew/Cellar/jmeter/5.6.3/libexec/lib/ext/jmeter-plugins-manager-1.9.jar with filter ExtendsClassFilter [parents=[interface org.apache.jmeter.functions.Function], inner=false, contains=null, notContains=null]. Consider exposing JMeter plugins via META-INF/services, and add JMeter-Skip-Class-Scanning=true manifest attribute so JMeter can skip classfile scanning
+2025-07-16 11:16:52,939 ERROR o.a.j.p.j.s.JavaSampler: StandardJMeterEngine-1@ceb40be8-Generate Yard Availability Payload (Python)	Exception initialising: 
+java.lang.ClassNotFoundException: org.apache.jmeter.protocol.java.sampler.OSProcessSampler
+	at java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:445) ~[?:?]
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:593) ~[?:?]
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526) ~[?:?]
+	at java.base/java.lang.Class.forName0(Native Method) ~[?:?]
+	at java.base/java.lang.Class.forName(Class.java:534) ~[?:?]
+	at java.base/java.lang.Class.forName(Class.java:513) ~[?:?]
+	at org.apache.jmeter.protocol.java.sampler.JavaSampler.initClass(JavaSampler.java:121) ~[ApacheJMeter_java.jar:5.6.3]
+	at org.apache.jmeter.protocol.java.sampler.JavaSampler.testStarted(JavaSampler.java:270) ~[ApacheJMeter_java.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.notifyTestListenersOfStart(StandardJMeterEngine.java:247) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.run(StandardJMeterEngine.java:432) ~[ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+2025-07-16 11:16:52,953 INFO o.a.j.v.b.BackendListener: Backend Listener: Starting worker with class: class org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient and queue capacity: 5000
+2025-07-16 11:16:52,954 INFO o.a.j.v.b.BackendListener: Backend Listener: Started  worker with class: class org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient
+2025-07-16 11:16:53,061 INFO o.a.j.JMeter: Running test (1752644813061)
+2025-07-16 11:16:53,080 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Tenant A Thread Group
+2025-07-16 11:16:53,094 ERROR o.a.j.v.b.i.HttpMetricsSender: failed to send data to influxDB server.
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[?:?]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682) ~[?:?]
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:973) ~[?:?]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvent(DefaultConnectingIOReactor.java:174) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvents(DefaultConnectingIOReactor.java:148) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.AbstractMultiworkerIOReactor.execute(AbstractMultiworkerIOReactor.java:351) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager.execute(PoolingNHttpClientConnectionManager.java:221) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at org.apache.http.impl.nio.client.CloseableHttpAsyncClientBase$1.run(CloseableHttpAsyncClientBase.java:64) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+2025-07-16 11:16:53,106 ERROR o.a.j.f.Jexl3Function: An error occurred while evaluating the expression "${target_rpm} / 60 * 0.1"
+
+org.apache.commons.jexl3.JexlException$Ambiguous: @1:2 ambiguous statement error in '${target_rpm} / 60 * 0.1'
+	at org.apache.commons.jexl3.parser.JexlParser.throwAmbiguousException(JexlParser.java:575) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.JexlParser.jjtreeCloseNodeScope(JexlParser.java:542) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.ExpressionStatement(Parser.java:386) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.Statement(Parser.java:258) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.JexlScript(Parser.java:65) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.parse(Parser.java:28) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.parse(Engine.java:869) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.createScript(Engine.java:478) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.createScript(Engine.java:64) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.JexlEngine.createScript(JexlEngine.java:375) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.jmeter.functions.Jexl3Function.execute(Jexl3Function.java:99) ~[ApacheJMeter_functions.jar:5.6.3]
+	at org.apache.jmeter.engine.util.CompoundVariable.execute(CompoundVariable.java:139) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.util.CompoundVariable.execute(CompoundVariable.java:114) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.property.FunctionProperty.getStringValue(FunctionProperty.java:104) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.property.AbstractProperty.getIntValue(AbstractProperty.java:110) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.TestElement.get(TestElement.kt:327) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.threads.AbstractThreadGroup.getNumThreads(AbstractThreadGroup.java:233) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.startThreadGroup(StandardJMeterEngine.java:554) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.run(StandardJMeterEngine.java:502) ~[ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+2025-07-16 11:16:53,107 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Tenant A Thread Group.
+2025-07-16 11:16:53,107 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2025-07-16 11:16:53,108 ERROR o.a.j.f.Jexl3Function: An error occurred while evaluating the expression "${target_rpm} / 60 * 0.1"
+
+org.apache.commons.jexl3.JexlException$Ambiguous: @1:2 ambiguous statement error in '${target_rpm} / 60 * 0.1'
+	at org.apache.commons.jexl3.parser.JexlParser.throwAmbiguousException(JexlParser.java:575) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.JexlParser.jjtreeCloseNodeScope(JexlParser.java:542) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.ExpressionStatement(Parser.java:386) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.Statement(Parser.java:258) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.JexlScript(Parser.java:65) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.parser.Parser.parse(Parser.java:28) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.parse(Engine.java:869) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.createScript(Engine.java:478) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.internal.Engine.createScript(Engine.java:64) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.commons.jexl3.JexlEngine.createScript(JexlEngine.java:375) ~[commons-jexl3-3.2.1.jar:3.2.1]
+	at org.apache.jmeter.functions.Jexl3Function.execute(Jexl3Function.java:99) ~[ApacheJMeter_functions.jar:5.6.3]
+	at org.apache.jmeter.engine.util.CompoundVariable.execute(CompoundVariable.java:139) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.util.CompoundVariable.execute(CompoundVariable.java:114) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.property.FunctionProperty.getStringValue(FunctionProperty.java:104) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.property.AbstractProperty.getIntValue(AbstractProperty.java:110) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.testelement.TestElement.get(TestElement.kt:327) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.threads.AbstractThreadGroup.getNumThreads(AbstractThreadGroup.java:233) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.threads.ThreadGroup.start(ThreadGroup.java:227) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.startThreadGroup(StandardJMeterEngine.java:577) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.run(StandardJMeterEngine.java:502) ~[ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+2025-07-16 11:16:53,108 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=0 ramp-up=0 delayedStart=false
+2025-07-16 11:16:53,108 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2025-07-16 11:16:53,108 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2025-07-16 11:16:53,108 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2025-07-16 11:16:53,109 INFO o.a.j.v.b.BackendListener: Worker ended
+2025-07-16 11:16:53,110 INFO o.a.j.v.b.i.InfluxdbBackendListenerClient: Sending last metrics to InfluxDB
+2025-07-16 11:16:53,111 INFO o.a.j.v.b.i.HttpMetricsSender: Destroying 
+2025-07-16 11:16:53,111 ERROR o.a.j.v.b.i.HttpMetricsSender: failed to send data to influxDB server.
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[?:?]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682) ~[?:?]
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:973) ~[?:?]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvent(DefaultConnectingIOReactor.java:174) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvents(DefaultConnectingIOReactor.java:148) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.AbstractMultiworkerIOReactor.execute(AbstractMultiworkerIOReactor.java:351) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager.execute(PoolingNHttpClientConnectionManager.java:221) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at org.apache.http.impl.nio.client.CloseableHttpAsyncClientBase$1.run(CloseableHttpAsyncClientBase.java:64) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+2025-07-16 11:16:53,111 ERROR o.a.j.v.b.i.HttpMetricsSender: Error waiting for last request to be send to InfluxDB
+java.util.concurrent.ExecutionException: java.net.ConnectException: Connection refused
+	at org.apache.http.concurrent.BasicFuture.getResult(BasicFuture.java:71) ~[httpcore-4.4.16.jar:4.4.16]
+	at org.apache.http.concurrent.BasicFuture.get(BasicFuture.java:102) ~[httpcore-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.client.FutureWrapper.get(FutureWrapper.java:75) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender.destroy(HttpMetricsSender.java:252) ~[ApacheJMeter_components.jar:5.6.3]
+	at org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient.teardownTest(InfluxdbBackendListenerClient.java:424) ~[ApacheJMeter_components.jar:5.6.3]
+	at org.apache.jmeter.visualizers.backend.BackendListener.testEnded(BackendListener.java:375) ~[ApacheJMeter_components.jar:5.6.3]
+	at org.apache.jmeter.visualizers.backend.BackendListener.testEnded(BackendListener.java:383) ~[ApacheJMeter_components.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.notifyTestListenersOfEnd(StandardJMeterEngine.java:266) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.run(StandardJMeterEngine.java:543) ~[ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[?:?]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682) ~[?:?]
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:973) ~[?:?]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvent(DefaultConnectingIOReactor.java:174) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor.processEvents(DefaultConnectingIOReactor.java:148) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.reactor.AbstractMultiworkerIOReactor.execute(AbstractMultiworkerIOReactor.java:351) ~[httpcore-nio-4.4.16.jar:4.4.16]
+	at org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager.execute(PoolingNHttpClientConnectionManager.java:221) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	at org.apache.http.impl.nio.client.CloseableHttpAsyncClientBase$1.run(CloseableHttpAsyncClientBase.java:64) ~[httpasyncclient-4.1.5.jar:4.1.5]
+	... 1 more
+2025-07-16 11:16:53,117 INFO o.a.j.r.Summariser: summary =      0 in 00:00:00 = ******/s Avg:     0 Min: 9223372036854775807 Max: -9223372036854775808 Err:     0 (0.00%)
+2025-07-16 11:16:53,118 INFO o.a.j.JMeter: Generating Dashboard
+2025-07-16 11:16:53,118 INFO o.a.j.r.d.ReportGenerator: Flushing result collector before report Generation
+2025-07-16 11:16:53,123 INFO o.a.j.r.p.NormalizerSampleConsumer: Using format, 'ms', to parse timeStamp field
+2025-07-16 11:16:53,140 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): beginDate produced 0 samples
+2025-07-16 11:16:53,140 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): endDate produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ApdexSummaryConsumer#stopProducing(): apdexSummary produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.RequestsSummaryConsumer#stopProducing(): requestsSummary produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.StatisticsSummaryConsumer#stopProducing(): statisticsSummary produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.Top5ErrorsBySamplerConsumer#stopProducing(): top5ErrorsBySampler produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ErrorsSummaryConsumer#stopProducing(): errorsSummary produced 0 samples
+2025-07-16 11:16:53,141 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.HitsPerSecondGraphConsumer#stopProducing(): hitsPerSecond produced 0 samples
+2025-07-16 11:16:53,148 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyVSRequestGraphConsumer#stopProducing(): latencyVsRequest produced 0 samples
+2025-07-16 11:16:53,148 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.SyntheticResponseTimeDistributionGraphConsumer#stopProducing(): syntheticResponseTimeDistribution produced 0 samples
+2025-07-16 11:16:53,148 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.BytesThroughputGraphConsumer#stopProducing(): bytesThroughputOverTime produced 0 samples
+2025-07-16 11:16:53,148 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.CodesPerSecondGraphConsumer#stopProducing(): codesPerSecond produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeVSRequestGraphConsumer#stopProducing(): responseTimeVsRequest produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): startIntervalControlerFilter produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TotalTPSGraphConsumer#stopProducing(): totalTPS produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ActiveThreadsGraphConsumer#stopProducing(): activeThreadsOverTime produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TimeVSThreadGraphConsumer#stopProducing(): timeVsThreads produced 0 samples
+2025-07-16 11:16:53,149 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeDistributionGraphConsumer#stopProducing(): responseTimeDistribution produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TransactionsPerSecondGraphConsumer#stopProducing(): transactionsPerSecond produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesGraphConsumer#stopProducing(): responseTimePercentiles produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesOverTimeGraphConsumer#stopProducing(): responseTimePercentilesOverTime produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeOverTimeGraphConsumer#stopProducing(): responseTimesOverTime produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ConnectTimeOverTimeGraphConsumer#stopProducing(): connectTimeOverTime produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyOverTimeGraphConsumer#stopProducing(): latenciesOverTime produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): nameFilter produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): dateRangeFilter produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.NormalizerSampleConsumer#stopProducing(): normalizer produced 0 samples
+2025-07-16 11:16:53,150 INFO o.a.j.r.p.CsvFileSampleSource: produce(): 0 samples produced in 13ms on channel 0
+2025-07-16 11:16:53,150 INFO o.a.j.r.d.ReportGenerator: Exporting data using exporter:'json' of className:'org.apache.jmeter.report.dashboard.JsonExporter'
+2025-07-16 11:16:53,195 INFO o.a.j.r.d.JsonExporter: Found data for consumer statisticsSummary in context
+2025-07-16 11:16:53,195 INFO o.a.j.r.d.JsonExporter: Creating statistics for overall
+2025-07-16 11:16:53,196 ERROR o.a.j.JMeter: Error generating the report: Cannot invoke "org.apache.jmeter.report.processor.MapResultData.getResult(String)" because "resultData" is null
+java.lang.NullPointerException: Cannot invoke "org.apache.jmeter.report.processor.MapResultData.getResult(String)" because "resultData" is null
+	at org.apache.jmeter.report.dashboard.JsonExporter.createStatistic(JsonExporter.java:126) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.report.dashboard.JsonExporter.export(JsonExporter.java:77) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.report.dashboard.ReportGenerator.exportData(ReportGenerator.java:383) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.report.dashboard.ReportGenerator.generate(ReportGenerator.java:261) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.JMeter$ListenToTest.endTest(JMeter.java:1285) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.JMeter$ListenToTest.testEnded(JMeter.java:1240) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.notifyTestListenersOfEnd(StandardJMeterEngine.java:266) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.engine.StandardJMeterEngine.run(StandardJMeterEngine.java:543) ~[ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]

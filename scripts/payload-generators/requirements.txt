@@ -1,0 +1,3 @@
+# Requirements for Python payload generators
+# Currently only standard library is used (json, sys, random, datetime)
+# If you add external dependencies, list them here 
