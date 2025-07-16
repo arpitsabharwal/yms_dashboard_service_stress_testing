@@ -1,6 +1,0 @@
-tenant_id,facility_id,facility_name,load_weight,carrier_ids
-TENANT_A,101,DC West,0.6,"201,202,203,204,205"
-TENANT_A,102,DC East,0.4,"206,207,208"
-TENANT_B,201,Warehouse North,0.7,"301,302,303"
-TENANT_B,202,Warehouse South,0.3,"304,305,306,307"
-TENANT_C,301,Distribution Hub Central,1.0,"401,402,403,404"

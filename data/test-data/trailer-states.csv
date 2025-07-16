@@ -1,6 +1,0 @@
-state_value,state_name,description
-all,All Trailers,All trailers regardless of status
-noFlags,No Flags,Trailers without any flags
-audit,Audit Required,Trailers requiring audit
-damaged,Damaged,Damaged trailers
-outOfService,Out of Service,Trailers out of service 

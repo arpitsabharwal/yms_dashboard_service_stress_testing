@@ -1,2462 +1,1306 @@
-# JMeter YMS Dashboard Testing Framework
+# YMS Dashboard Stress Testing Framework Implementation
 
-## Project Structure
+## 1. Project Structure
 
 ```
-jmeter-yms-dashboard-test/
-├── test-plans/
-│   ├── yms-dashboard-main.jmx
-│   ├── api-fragments/
-│   │   ├── yard-availability.jmx
-│   │   ├── trailer-overview.jmx
-│   │   ├── trailer-exceptions.jmx
-│   │   ├── task-workload.jmx
-│   │   ├── task-attention.jmx
-│   │   ├── site-occupancy.jmx
-│   │   ├── shipment-forecast.jmx
-│   │   ├── dwell-time.jmx
-│   │   ├── door-breakdown.jmx
-│   │   └── detention-summary.jmx
-│   └── load-profiles/
-│       ├── smoke-test.jmx
-│       ├── load-test.jmx
-│       └── stress-test.jmx
-├── data/
-│   ├── tenants.csv
-│   ├── facilities.csv
-│   ├── carriers.csv
-│   ├── auth-tokens.csv
-│   └── test-data/
-│       ├── trailer-states.csv
-│       └── shipment-directions.csv
-├── scripts/
-│   ├── payload-generators/
-│   │   ├── base-payload-generator.groovy
-│   │   ├── facility-request-generator.groovy
-│   │   ├── carrier-request-generator.groovy
-│   │   ├── trailer-overview-generator.groovy
-│   │   ├── trailer-exceptions-generator.groovy
-│   │   ├── shipment-forecast-generator.groovy
-│   │   └── saved-filter-generator.groovy
-│   ├── setup.sh
-│   ├── run-test.sh
-│   └── run-distributed.sh
-├── config/
-│   ├── jmeter.properties
-│   ├── user.properties
-│   └── test-profiles/
-│       ├── smoke-test.properties
-│       ├── load-test.properties
-│       └── stress-test.properties
-├── results/
-│   └── .gitkeep
+yms-stress-testing-framework/
+├── jmeter/
+│   ├── test-plans/
+│   │   ├── YMS-Dashboard-Master-Test.jmx
+│   │   ├── templates/
+│   │   │   ├── endpoint-template.jmx
+│   │   │   └── tenant-template.jmx
+│   │   └── scenarios/
+│   │       ├── smoke-test.jmx
+│   │       ├── load-test.jmx
+│   │       └── stress-test.jmx
+│   ├── data/
+│   │   ├── tenant-data.csv
+│   │   └── test-data/
+│   └── lib/
+│       └── jython-standalone-2.7.3.jar
+├── python/
+│   ├── setup.py
+│   ├── requirements.txt
+│   ├── config/
+│   │   ├── tenant_config.yaml
+│   │   ├── endpoint_config.yaml
+│   │   └── test_scenarios.yaml
+│   ├── generators/
+│   │   ├── __init__.py
+│   │   ├── base_generator.py
+│   │   ├── payload_generators.py
+│   │   └── data_pool.py
+│   ├── validators/
+│   │   ├── __init__.py
+│   │   ├── base_validator.py
+│   │   └── response_validators.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── tenant_manager.py
+│   │   ├── metrics_collector.py
+│   │   ├── logger.py
+│   │   └── report_generator.py
+│   └── cli.py
+├── logs/
+│   ├── jmeter/
+│   └── python/
 ├── reports/
-│   └── .gitkeep
-└── README.md
+│   ├── html/
+│   ├── csv/
+│   └── summary/
+├── scripts/
+│   ├── run-local.sh
+│   ├── run-distributed.sh
+│   ├── generate-reports.sh
+│   └── analyze-results.py
+└── docs/
+    ├── setup-guide.md
+    ├── execution-guide.md
+    └── troubleshooting.md
 ```
 
-## 1. Main Test Plan (yms-dashboard-main.jmx)
+## 2. Python Implementation
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
-  <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="YMS Dashboard Service Test Plan" enabled="true">
-      <stringProp name="TestPlan.comments">Multi-tenant stress testing framework for YMS Dashboard Service APIs</stringProp>
-      <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
-      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
-        <collectionProp name="Arguments.arguments">
-          <elementProp name="BASE_URL" elementType="Argument">
-            <stringProp name="Argument.name">BASE_URL</stringProp>
-            <stringProp name="Argument.value">${__P(base.url,http://localhost:5003)}</stringProp>
-          </elementProp>
-          <elementProp name="TEST_DURATION" elementType="Argument">
-            <stringProp name="Argument.name">TEST_DURATION</stringProp>
-            <stringProp name="Argument.value">${__P(test.duration,3600)}</stringProp>
-          </elementProp>
-          <elementProp name="RPM_MULTIPLIER" elementType="Argument">
-            <stringProp name="Argument.name">RPM_MULTIPLIER</stringProp>
-            <stringProp name="Argument.value">${__P(rpm.multiplier,1.0)}</stringProp>
-          </elementProp>
-        </collectionProp>
-      </elementProp>
-    </TestPlan>
-    <hashTree>
-      
-      <!-- HTTP Request Defaults -->
-      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
-        <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-          <collectionProp name="Arguments.arguments"/>
-        </elementProp>
-        <stringProp name="HTTPSampler.domain">${BASE_URL}</stringProp>
-        <stringProp name="HTTPSampler.protocol">http</stringProp>
-        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-      </ConfigTestElement>
-      <hashTree/>
-      
-      <!-- HTTP Header Manager -->
-      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-        <collectionProp name="HeaderManager.headers">
-          <elementProp name="Content-Type" elementType="Header">
-            <stringProp name="Header.name">Content-Type</stringProp>
-            <stringProp name="Header.value">application/json</stringProp>
-          </elementProp>
-          <elementProp name="Accept" elementType="Header">
-            <stringProp name="Header.name">Accept</stringProp>
-            <stringProp name="Header.value">application/json</stringProp>
-          </elementProp>
-        </collectionProp>
-      </HeaderManager>
-      <hashTree/>
-      
-      <!-- CSV Data Set Config for Tenants -->
-      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Tenant Configuration" enabled="true">
-        <stringProp name="filename">data/tenants.csv</stringProp>
-        <stringProp name="fileEncoding">UTF-8</stringProp>
-        <stringProp name="variableNames">tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds</stringProp>
-        <boolProp name="ignoreFirstLine">true</boolProp>
-        <stringProp name="delimiter">,</stringProp>
-        <boolProp name="quotedData">true</boolProp>
-        <boolProp name="recycle">true</boolProp>
-        <boolProp name="stopThread">false</boolProp>
-        <stringProp name="shareMode">shareMode.all</stringProp>
-      </CSVDataSet>
-      <hashTree/>
-      
-      <!-- Thread Group for Tenant A -->
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Tenant A Thread Group" enabled="true">
-        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
-        <elementProp name="ThreadGroup.main_controller" elementType="LoopController">
-          <boolProp name="LoopController.continue_forever">false</boolProp>
-          <intProp name="LoopController.loops">-1</intProp>
-        </elementProp>
-        <stringProp name="ThreadGroup.num_threads">${__jexl3(${target_rpm} / 60 * ${RPM_MULTIPLIER})}</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">${ramp_up_seconds}</stringProp>
-        <stringProp name="ThreadGroup.duration">${TEST_DURATION}</stringProp>
-        <stringProp name="ThreadGroup.delay">0</stringProp>
-        <boolProp name="ThreadGroup.scheduler">true</boolProp>
-      </ThreadGroup>
-      <hashTree>
+### 2.1 Base Generator (base_generator.py)
+
+```python
+import json
+import random
+from abc import ABC, abstractmethod
+from typing import Dict, Any, List
+import yaml
+from datetime import datetime, timedelta
+
+class BaseGenerator(ABC):
+    """Base class for all payload generators"""
+    
+    def __init__(self, tenant_config: Dict[str, Any]):
+        self.tenant_config = tenant_config
+        self.tenant_name = tenant_config.get('name')
+        self.data_pool = tenant_config.get('data_pool', {})
         
-        <!-- If Controller for Tenant A -->
-        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Tenant A" enabled="true">
-          <stringProp name="IfController.condition">${__groovy(&quot;${tenant_id}&quot; == &quot;TENANT_A&quot;)}</stringProp>
-          <boolProp name="IfController.evaluateAll">false</boolProp>
-        </IfController>
-        <hashTree>
-          
-          <!-- Facility Data for Tenant -->
-          <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Facility Data" enabled="true">
-            <stringProp name="filename">data/facilities.csv</stringProp>
-            <stringProp name="fileEncoding">UTF-8</stringProp>
-            <stringProp name="variableNames">tenant_id,facility_id,facility_name,load_weight,carrier_ids</stringProp>
-            <boolProp name="ignoreFirstLine">true</boolProp>
-            <stringProp name="delimiter">,</stringProp>
-            <boolProp name="quotedData">true</boolProp>
-            <boolProp name="recycle">true</boolProp>
-            <boolProp name="stopThread">false</boolProp>
-            <stringProp name="shareMode">shareMode.thread</stringProp>
-          </CSVDataSet>
-          <hashTree/>
-          
-          <!-- Constant Throughput Timer -->
-          <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="Constant Throughput Timer" enabled="true">
-            <doubleProp>
-              <name>throughput</name>
-              <value>${__jexl3(${target_rpm} * ${RPM_MULTIPLIER})}</value>
-              <savedValue>0.0</savedValue>
-            </doubleProp>
-            <intProp name="calcMode">2</intProp>
-          </ConstantThroughputTimer>
-          <hashTree/>
-          
-          <!-- Random Controller for API Mix -->
-          <RandomController guiclass="RandomControlGui" testclass="RandomController" testname="API Mix Controller" enabled="true">
-            <intProp name="InterleaveControl.style">1</intProp>
-          </RandomController>
-          <hashTree>
-            
-            <!-- Throughput Controller for Yard Availability (15%) -->
-            <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="Yard Availability Controller" enabled="true">
-              <intProp name="ThroughputController.style">1</intProp>
-              <boolProp name="ThroughputController.perThread">false</boolProp>
-              <intProp name="ThroughputController.maxThroughput">1</intProp>
-              <FloatProperty>
-                <name>ThroughputController.percentThroughput</name>
-                <value>15.0</value>
-                <savedValue>0.0</savedValue>
-              </FloatProperty>
-            </ThroughputController>
-            <hashTree>
-              <IncludeController guiclass="IncludeControllerGui" testclass="IncludeController" testname="Include Yard Availability" enabled="true">
-                <stringProp name="IncludeController.includepath">api-fragments/yard-availability.jmx</stringProp>
-              </IncludeController>
-              <hashTree/>
-            </hashTree>
-            
-            <!-- Similar Throughput Controllers for other APIs -->
-            <!-- ... (repeat for all 10 APIs with their respective percentages) -->
-            
-          </hashTree>
-        </hashTree>
-      </hashTree>
-      
-      <!-- Backend Listener for Real-time Monitoring -->
-      <BackendListener guiclass="BackendListenerGui" testclass="BackendListener" testname="Backend Listener" enabled="true">
-        <elementProp name="arguments" elementType="Arguments">
-          <collectionProp name="Arguments.arguments">
-            <elementProp name="influxdbMetricsSender" elementType="Argument">
-              <stringProp name="Argument.name">influxdbMetricsSender</stringProp>
-              <stringProp name="Argument.value">org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender</stringProp>
-            </elementProp>
-            <elementProp name="influxdbUrl" elementType="Argument">
-              <stringProp name="Argument.name">influxdbUrl</stringProp>
-              <stringProp name="Argument.value">http://localhost:8086/write?db=jmeter</stringProp>
-            </elementProp>
-            <elementProp name="application" elementType="Argument">
-              <stringProp name="Argument.name">application</stringProp>
-              <stringProp name="Argument.value">YMS-Dashboard</stringProp>
-            </elementProp>
-            <elementProp name="measurement" elementType="Argument">
-              <stringProp name="Argument.name">measurement</stringProp>
-              <stringProp name="Argument.value">jmeter</stringProp>
-            </elementProp>
-            <elementProp name="summaryOnly" elementType="Argument">
-              <stringProp name="Argument.name">summaryOnly</stringProp>
-              <stringProp name="Argument.value">false</stringProp>
-            </elementProp>
-            <elementProp name="samplersRegex" elementType="Argument">
-              <stringProp name="Argument.name">samplersRegex</stringProp>
-              <stringProp name="Argument.value">.*</stringProp>
-            </elementProp>
-            <elementProp name="percentiles" elementType="Argument">
-              <stringProp name="Argument.name">percentiles</stringProp>
-              <stringProp name="Argument.value">90;95;99</stringProp>
-            </elementProp>
-            <elementProp name="testTitle" elementType="Argument">
-              <stringProp name="Argument.name">testTitle</stringProp>
-              <stringProp name="Argument.value">YMS Dashboard Load Test - ${__time(yyyy-MM-dd HH:mm:ss)}</stringProp>
-            </elementProp>
-            <elementProp name="eventTags" elementType="Argument">
-              <stringProp name="Argument.name">eventTags</stringProp>
-              <stringProp name="Argument.value"></stringProp>
-            </elementProp>
-          </collectionProp>
-        </elementProp>
-        <stringProp name="classname">org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient</stringProp>
-      </BackendListener>
-      <hashTree/>
-      
-      <!-- View Results Tree (disabled for performance) -->
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
-        <boolProp name="ResultCollector.error_logging">false</boolProp>
-        <objProp>
-          <name>saveConfig</name>
-          <value class="SampleSaveConfiguration">
-            <time>true</time>
-            <latency>true</latency>
-            <timestamp>true</timestamp>
-            <success>true</success>
-            <label>true</label>
-            <code>true</code>
-            <message>true</message>
-            <threadName>true</threadName>
-            <dataType>true</dataType>
-            <encoding>false</encoding>
-            <assertions>true</assertions>
-            <subresults>true</subresults>
-            <responseData>false</responseData>
-            <samplerData>false</samplerData>
-            <xml>false</xml>
-            <fieldNames>true</fieldNames>
-            <responseHeaders>false</responseHeaders>
-            <requestHeaders>false</requestHeaders>
-            <responseDataOnError>false</responseDataOnError>
-            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-            <assertionsResultsToSave>0</assertionsResultsToSave>
-            <bytes>true</bytes>
-            <sentBytes>true</sentBytes>
-            <url>true</url>
-            <threadCounts>true</threadCounts>
-            <idleTime>true</idleTime>
-            <connectTime>true</connectTime>
-          </value>
-        </objProp>
-        <stringProp name="filename"></stringProp>
-      </ResultCollector>
-      <hashTree/>
-      
-      <!-- Summary Report -->
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
-        <boolProp name="ResultCollector.error_logging">false</boolProp>
-        <objProp>
-          <name>saveConfig</name>
-          <value class="SampleSaveConfiguration">
-            <time>true</time>
-            <latency>true</latency>
-            <timestamp>true</timestamp>
-            <success>true</success>
-            <label>true</label>
-            <code>true</code>
-            <message>true</message>
-            <threadName>true</threadName>
-            <dataType>false</dataType>
-            <encoding>false</encoding>
-            <assertions>true</assertions>
-            <subresults>true</subresults>
-            <responseData>false</responseData>
-            <samplerData>false</samplerData>
-            <xml>false</xml>
-            <fieldNames>true</fieldNames>
-            <responseHeaders>false</responseHeaders>
-            <requestHeaders>false</requestHeaders>
-            <responseDataOnError>false</responseDataOnError>
-            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-            <assertionsResultsToSave>0</assertionsResultsToSave>
-            <bytes>true</bytes>
-            <sentBytes>true</sentBytes>
-            <url>true</url>
-            <threadCounts>true</threadCounts>
-            <idleTime>true</idleTime>
-            <connectTime>true</connectTime>
-          </value>
-        </objProp>
-        <stringProp name="filename">results/summary_${__time(yyyyMMdd_HHmmss)}.jtl</stringProp>
-      </ResultCollector>
-      <hashTree/>
-      
-    </hashTree>
-  </hashTree>
-</jmeterTestPlan>
+    @abstractmethod
+    def generate(self) -> Dict[str, Any]:
+        """Generate payload specific to the endpoint"""
+        pass
+    
+    def get_random_facility_id(self) -> int:
+        """Get random facility ID from tenant's pool"""
+        facility_ids = self.data_pool.get('facility_ids', [1001, 1002, 1003])
+        return random.choice(facility_ids)
+    
+    def get_random_carrier_ids(self, count: int = None) -> List[int]:
+        """Get random carrier IDs from tenant's pool"""
+        carrier_ids = self.data_pool.get('carrier_ids', [2001, 2002, 2003, 2004])
+        if count is None:
+            count = random.randint(1, len(carrier_ids))
+        return random.sample(carrier_ids, min(count, len(carrier_ids)))
+    
+    def to_json(self) -> str:
+        """Convert generated payload to JSON string"""
+        return json.dumps(self.generate())
 ```
 
-## 2. API Fragment Example (api-fragments/yard-availability.jmx)
+### 2.2 Payload Generators (payload_generators.py)
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
-  <hashTree>
-    <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Yard Availability API" enabled="true"/>
-    <hashTree>
-      
-      <!-- JSR223 PreProcessor for Payload Generation -->
-      <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Generate Yard Availability Payload" enabled="true">
-        <stringProp name="scriptLanguage">groovy</stringProp>
-        <stringProp name="parameters"></stringProp>
-        <stringProp name="filename"></stringProp>
-        <stringProp name="cacheKey">true</stringProp>
-        <stringProp name="script">import groovy.json.JsonBuilder
+```python
+from .base_generator import BaseGenerator
+from typing import Dict, Any
+import random
 
-// Generate payload for yard-availability API
-def payload = new JsonBuilder()
-payload {
-    facilityId Integer.parseInt(vars.get("facility_id"))
+class FacilityRequestGenerator(BaseGenerator):
+    """Generator for FacilityRequestPayloadDTO"""
+    
+    def generate(self) -> Dict[str, Any]:
+        return {
+            "facilityId": self.get_random_facility_id()
+        }
+
+class TrailerOverviewRequestGenerator(BaseGenerator):
+    """Generator for TrailerOverviewRequestPayloadDTO"""
+    
+    TRAILER_STATES = ["all", "noFlags", "audit", "damaged", "outOfService"]
+    
+    def generate(self) -> Dict[str, Any]:
+        return {
+            "facilityId": self.get_random_facility_id(),
+            "carrierIds": self.get_random_carrier_ids(),
+            "trailerState": random.choice(self.TRAILER_STATES)
+        }
+
+class TrailerExceptionsRequestGenerator(BaseGenerator):
+    """Generator for TrailerExceptionsRequestPayloadDTO"""
+    
+    def generate(self) -> Dict[str, Any]:
+        return {
+            "facilityId": self.get_random_facility_id(),
+            "carrierIds": self.get_random_carrier_ids(),
+            "lastDetectionTimeThresholdHours": random.randint(1, 24),
+            "inboundLoadedThresholdHours": random.randint(4, 48)
+        }
+
+class FacilityCarrierRequestGenerator(BaseGenerator):
+    """Generator for FacilityCarrierRequestPayloadDTO"""
+    
+    def generate(self) -> Dict[str, Any]:
+        return {
+            "facilityId": self.get_random_facility_id(),
+            "carrierIds": self.get_random_carrier_ids()
+        }
+
+class ShipmentVolumeForecastRequestGenerator(BaseGenerator):
+    """Generator for ShipmentVolumeForecastRequestPayloadDTO"""
+    
+    SHIPMENT_DIRECTIONS = ["Inbound", "Outbound"]
+    
+    def generate(self) -> Dict[str, Any]:
+        return {
+            "facilityId": self.get_random_facility_id(),
+            "carrierIds": self.get_random_carrier_ids(),
+            "shipmentDirection": random.choice(self.SHIPMENT_DIRECTIONS)
+        }
+
+class SavedFilterTrailerCountRequestGenerator(BaseGenerator):
+    """Generator for SavedFilterTrailerCountRequestPayloadDTO"""
+    
+    def generate(self) -> Dict[str, Any]:
+        user_ids = self.data_pool.get('user_ids', [3001, 3002, 3003])
+        saved_filter_ids = self.data_pool.get('saved_filter_ids', [4001, 4002, 4003])
+        
+        return {
+            "facilityId": self.get_random_facility_id(),
+            "savedFilterId": random.choice(saved_filter_ids),
+            "userId": random.choice(user_ids)
+        }
+
+# Generator factory
+GENERATORS = {
+    "yard-availability": FacilityRequestGenerator,
+    "trailer-overview": TrailerOverviewRequestGenerator,
+    "trailer-exception-summary": TrailerExceptionsRequestGenerator,
+    "task-workload-summary": FacilityRequestGenerator,
+    "task-attention-summary": FacilityRequestGenerator,
+    "site-occupancy": FacilityCarrierRequestGenerator,
+    "shipment-volume-forecast": ShipmentVolumeForecastRequestGenerator,
+    "dwell-time-summary": FacilityCarrierRequestGenerator,
+    "door-breakdown-summary": FacilityRequestGenerator,
+    "detention-summary": FacilityCarrierRequestGenerator,
+    "saved-filter-trailer-count": SavedFilterTrailerCountRequestGenerator
 }
 
-vars.put("request_payload", payload.toString())
-log.info("Generated payload for yard-availability: " + payload.toString())</stringProp>
-      </JSR223PreProcessor>
-      <hashTree/>
-      
-      <!-- HTTP Request -->
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Yard Availability" enabled="true">
-        <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-        <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-          <collectionProp name="Arguments.arguments">
-            <elementProp name="" elementType="HTTPArgument">
-              <boolProp name="HTTPArgument.always_encode">false</boolProp>
-              <stringProp name="Argument.value">${request_payload}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-          </collectionProp>
-        </elementProp>
-        <stringProp name="HTTPSampler.domain"></stringProp>
-        <stringProp name="HTTPSampler.port"></stringProp>
-        <stringProp name="HTTPSampler.protocol"></stringProp>
-        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-        <stringProp name="HTTPSampler.path">/yms-dashboard-service/api/v1/yard-availability</stringProp>
-        <stringProp name="HTTPSampler.method">POST</stringProp>
-        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-        <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-        <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
-        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
-        <stringProp name="HTTPSampler.response_timeout">30000</stringProp>
-      </HTTPSamplerProxy>
-      <hashTree>
-        
-        <!-- HTTP Header Manager for Auth -->
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="API Headers" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="Authorization" elementType="Header">
-              <stringProp name="Header.name">Authorization</stringProp>
-              <stringProp name="Header.value">${auth_token}</stringProp>
-            </elementProp>
-            <elementProp name="tenant" elementType="Header">
-              <stringProp name="Header.name">tenant</stringProp>
-              <stringProp name="Header.value">${tenant_id}</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
-        <hashTree/>
-        
-        <!-- Response Assertion -->
-        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
-          <collectionProp name="Asserion.test_strings">
-            <stringProp name="49586">200</stringProp>
-          </collectionProp>
-          <stringProp name="Assertion.custom_message">Expected HTTP 200 response</stringProp>
-          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
-          <boolProp name="Assertion.assume_success">false</boolProp>
-          <intProp name="Assertion.test_type">8</intProp>
-        </ResponseAssertion>
-        <hashTree/>
-        
-        <!-- JSON Assertion -->
-        <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="JSON Path Assertion" enabled="true">
-          <stringProp name="JSON_PATH">$.facilityId</stringProp>
-          <stringProp name="EXPECTED_VALUE">${facility_id}</stringProp>
-          <boolProp name="JSONVALIDATION">true</boolProp>
-          <boolProp name="EXPECT_NULL">false</boolProp>
-          <boolProp name="INVERT">false</boolProp>
-          <boolProp name="ISREGEX">false</boolProp>
-        </JSONPathAssertion>
-        <hashTree/>
-        
-        <!-- Duration Assertion -->
-        <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
-          <stringProp name="DurationAssertion.duration">2000</stringProp>
-        </DurationAssertion>
-        <hashTree/>
-        
-      </hashTree>
-    </hashTree>
-  </hashTree>
-</jmeterTestPlan>
+def get_generator(endpoint: str, tenant_config: Dict[str, Any]) -> BaseGenerator:
+    """Factory method to get appropriate generator"""
+    generator_class = GENERATORS.get(endpoint)
+    if not generator_class:
+        raise ValueError(f"No generator found for endpoint: {endpoint}")
+    return generator_class(tenant_config)
 ```
 
-## 3. Groovy Scripts
+### 2.3 Response Validators (response_validators.py)
 
-### scripts/payload-generators/base-payload-generator.groovy
+```python
+import json
+from typing import Dict, Any, List, Tuple
+from datetime import datetime
 
-```groovy
-import groovy.json.JsonBuilder
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.ThreadLocalRandom
-
-/**
- * Base payload generator with common utility methods
- */
-class BasePayloadGenerator {
+class ResponseValidator:
+    """Validates API responses"""
     
-    static Random random = new Random()
+    def __init__(self):
+        self.validation_results = []
     
-    /**
-     * Get random element from array
-     */
-    static def getRandomElement(array) {
-        if (array == null || array.size() == 0) {
-            return null
-        }
-        return array[random.nextInt(array.size())]
-    }
-    
-    /**
-     * Get random subset from array
-     */
-    static def getRandomSubset(array, maxSize = -1) {
-        if (array == null || array.size() == 0) {
-            return []
+    def validate_response(self, 
+                         endpoint: str,
+                         response_code: int,
+                         response_body: str,
+                         response_time: float) -> Tuple[bool, Dict[str, Any]]:
+        """Validate complete response"""
+        
+        results = {
+            "endpoint": endpoint,
+            "timestamp": datetime.now().isoformat(),
+            "response_code": response_code,
+            "response_time": response_time,
+            "validations": {}
         }
         
-        def shuffled = array.clone()
-        Collections.shuffle(shuffled, random)
-        
-        def size = maxSize > 0 ? Math.min(maxSize, shuffled.size()) : 
-                   random.nextInt(shuffled.size()) + 1
-        
-        return shuffled.take(size)
-    }
-    
-    /**
-     * Generate random date in ISO format
-     */
-    static String getRandomDate(daysFromNow = 30) {
-        def now = LocalDateTime.now()
-        def randomDays = random.nextInt(daysFromNow)
-        def randomDate = now.plusDays(randomDays)
-        return randomDate.format(DateTimeFormatter.ISO_DATE_TIME)
-    }
-    
-    /**
-     * Generate random past date in ISO format
-     */
-    static String getRandomPastDate(daysAgo = 30) {
-        def now = LocalDateTime.now()
-        def randomDays = random.nextInt(daysAgo)
-        def randomDate = now.minusDays(randomDays)
-        return randomDate.format(DateTimeFormatter.ISO_DATE_TIME)
-    }
-    
-    /**
-     * Parse carrier IDs from CSV string
-     */
-    static List<Integer> parseCarrierIds(String carrierIdsString) {
-        if (carrierIdsString == null || carrierIdsString.trim().isEmpty()) {
-            return []
+        # Status code validation
+        status_valid = self.validate_status_code(response_code)
+        results["validations"]["status_code"] = {
+            "valid": status_valid,
+            "expected": 200,
+            "actual": response_code
         }
         
-        return carrierIdsString.split(",").collect { it.trim() as Integer }
-    }
+        # Response time validation (SLA: 2 seconds)
+        time_valid = self.validate_response_time(response_time, sla=2000)
+        results["validations"]["response_time"] = {
+            "valid": time_valid,
+            "sla_ms": 2000,
+            "actual_ms": response_time
+        }
+        
+        # Response body validation
+        if response_body:
+            body_valid, body_errors = self.validate_response_body(endpoint, response_body)
+            results["validations"]["response_body"] = {
+                "valid": body_valid,
+                "errors": body_errors
+            }
+        else:
+            body_valid = False
+            results["validations"]["response_body"] = {
+                "valid": False,
+                "errors": ["Empty response body"]
+            }
+        
+        # Overall validation
+        overall_valid = status_valid and time_valid and body_valid
+        results["overall_valid"] = overall_valid
+        
+        return overall_valid, results
     
-    /**
-     * Get random threshold hours
-     */
-    static Integer getRandomThresholdHours() {
-        def thresholds = [24, 48, 72, 96, 120]
-        return getRandomElement(thresholds)
-    }
+    def validate_status_code(self, status_code: int) -> bool:
+        """Validate HTTP status code"""
+        return status_code == 200
     
-    /**
-     * Get random page size
-     */
-    static Integer getRandomPageSize() {
-        def sizes = [10, 20, 50, 100]
-        return getRandomElement(sizes)
-    }
-}
+    def validate_response_time(self, response_time: float, sla: float) -> bool:
+        """Validate response time against SLA"""
+        return response_time <= sla
+    
+    def validate_response_body(self, endpoint: str, response_body: str) -> Tuple[bool, List[str]]:
+        """Validate response body structure"""
+        errors = []
+        
+        try:
+            data = json.loads(response_body)
+        except json.JSONDecodeError:
+            return False, ["Invalid JSON response"]
+        
+        # Endpoint-specific validations
+        if endpoint == "yard-availability":
+            errors.extend(self._validate_yard_availability(data))
+        elif endpoint == "trailer-overview":
+            errors.extend(self._validate_trailer_overview(data))
+        # Add more endpoint-specific validations...
+        
+        return len(errors) == 0, errors
+    
+    def _validate_yard_availability(self, data: Dict[str, Any]) -> List[str]:
+        """Validate yard availability response"""
+        errors = []
+        
+        if "docks" not in data:
+            errors.append("Missing 'docks' field")
+        if "parkingSpots" not in data:
+            errors.append("Missing 'parkingSpots' field")
+        
+        for field in ["docks", "parkingSpots"]:
+            if field in data:
+                errors.extend(self._validate_availability_metrics(data[field], field))
+        
+        return errors
+    
+    def _validate_trailer_overview(self, data: Dict[str, Any]) -> List[str]:
+        """Validate trailer overview response"""
+        errors = []
+        
+        if "totalTrailersCount" not in data:
+            errors.append("Missing 'totalTrailersCount' field")
+        elif not isinstance(data["totalTrailersCount"], int) or data["totalTrailersCount"] < 0:
+            errors.append("Invalid 'totalTrailersCount' value")
+        
+        if "trailerOverviewMetrics" not in data:
+            errors.append("Missing 'trailerOverviewMetrics' field")
+        else:
+            metrics = data["trailerOverviewMetrics"]
+            required_fields = ["loadedInbound", "loadedOutbound", "empty", "partial"]
+            for field in required_fields:
+                if field not in metrics:
+                    errors.append(f"Missing '{field}' in trailerOverviewMetrics")
+        
+        return errors
+    
+    def _validate_availability_metrics(self, metrics: Dict[str, Any], metric_name: str) -> List[str]:
+        """Validate availability metrics structure"""
+        errors = []
+        
+        if "total" not in metrics:
+            errors.append(f"Missing 'total' in {metric_name}")
+        
+        for status in ["active", "inactive"]:
+            if status not in metrics:
+                errors.append(f"Missing '{status}' in {metric_name}")
+            elif not self._validate_percentage_breakdown(metrics[status]):
+                errors.append(f"Invalid percentage breakdown for {status} in {metric_name}")
+        
+        return errors
+    
+    def _validate_percentage_breakdown(self, breakdown: Dict[str, Any]) -> bool:
+        """Validate percentage breakdown structure"""
+        if not isinstance(breakdown, dict):
+            return False
+        
+        required_fields = ["count", "percentage"]
+        for field in required_fields:
+            if field not in breakdown:
+                return False
+            if not isinstance(breakdown[field], int) or breakdown[field] < 0:
+                return False
+        
+        return breakdown["percentage"] <= 100
 ```
 
-### scripts/payload-generators/facility-request-generator.groovy
+### 2.4 Tenant Manager (tenant_manager.py)
+
+```python
+import yaml
+from typing import Dict, Any, List
+import os
+
+class TenantManager:
+    """Manages tenant configurations and data"""
+    
+    def __init__(self, config_path: str = "config/tenant_config.yaml"):
+        self.config_path = config_path
+        self.tenants = self._load_tenant_config()
+    
+    def _load_tenant_config(self) -> Dict[str, Any]:
+        """Load tenant configuration from YAML file"""
+        with open(self.config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        return config.get('tenants', {})
+    
+    def get_tenant_config(self, tenant_name: str) -> Dict[str, Any]:
+        """Get configuration for specific tenant"""
+        if tenant_name not in self.tenants:
+            raise ValueError(f"Tenant '{tenant_name}' not found in configuration")
+        return self.tenants[tenant_name]
+    
+    def get_all_tenants(self) -> List[str]:
+        """Get list of all configured tenants"""
+        return list(self.tenants.keys())
+    
+    def get_tenant_rpm_config(self, tenant_name: str) -> Dict[str, int]:
+        """Get RPM configuration for tenant"""
+        tenant_config = self.get_tenant_config(tenant_name)
+        return tenant_config.get('rpm_config', {})
+    
+    def get_tenant_auth_token(self, tenant_name: str) -> str:
+        """Get authentication token for tenant"""
+        tenant_config = self.get_tenant_config(tenant_name)
+        return tenant_config.get('auth', {}).get('token', '')
+```
+
+### 2.6 Logger Utility (logger.py)
+
+```python
+import logging
+import os
+from datetime import datetime
+from typing import Optional
+
+class StressTestLogger:
+    """Centralized logging for stress testing framework"""
+    
+    def __init__(self, name: str, log_dir: str = "logs/python"):
+        self.name = name
+        self.log_dir = log_dir
+        os.makedirs(log_dir, exist_ok=True)
+        
+        # Create logger
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
+        
+        # File handler for all logs
+        log_file = os.path.join(log_dir, f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        
+        # Console handler for important logs
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        
+        # Formatter
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+        
+        # Add handlers
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+    
+    def info(self, message: str):
+        self.logger.info(message)
+    
+    def error(self, message: str, exc_info: Optional[Exception] = None):
+        self.logger.error(message, exc_info=exc_info)
+    
+    def warning(self, message: str):
+        self.logger.warning(message)
+    
+    def debug(self, message: str):
+        self.logger.debug(message)
+
+# Global logger instance
+stress_logger = StressTestLogger("stress-test")
+```
+
+### 2.7 Report Generator (report_generator.py)
+
+```python
+import csv
+import json
+import os
+from datetime import datetime
+from typing import Dict, List, Any
+import statistics
+from collections import defaultdict
+
+class ReportGenerator:
+    """Generate HTML and CSV reports from test results"""
+    
+    def __init__(self, results_dir: str = "reports"):
+        self.results_dir = results_dir
+        os.makedirs(results_dir, exist_ok=True)
+        os.makedirs(os.path.join(results_dir, "html"), exist_ok=True)
+        os.makedirs(os.path.join(results_dir, "csv"), exist_ok=True)
+        os.makedirs(os.path.join(results_dir, "summary"), exist_ok=True)
+    
+    def generate_summary_report(self, jtl_file: str, tenant: str) -> Dict[str, Any]:
+        """Generate summary statistics from JTL file"""
+        
+        results = {
+            "tenant": tenant,
+            "test_date": datetime.now().isoformat(),
+            "total_requests": 0,
+            "failed_requests": 0,
+            "error_rate": 0.0,
+            "endpoints": defaultdict(lambda: {
+                "count": 0,
+                "errors": 0,
+                "response_times": [],
+                "min_rt": 0,
+                "max_rt": 0,
+                "avg_rt": 0,
+                "p90_rt": 0,
+                "p95_rt": 0,
+                "p99_rt": 0
+            })
+        }
+        
+        # Parse JTL file
+        with open(jtl_file, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                endpoint = row.get('label', '')
+                success = row.get('success', 'true') == 'true'
+                response_time = int(row.get('elapsed', 0))
+                
+                results["total_requests"] += 1
+                if not success:
+                    results["failed_requests"] += 1
+                
+                # Endpoint specific stats
+                ep_stats = results["endpoints"][endpoint]
+                ep_stats["count"] += 1
+                ep_stats["response_times"].append(response_time)
+                if not success:
+                    ep_stats["errors"] += 1
+        
+        # Calculate statistics
+        results["error_rate"] = (results["failed_requests"] / results["total_requests"] * 100) if results["total_requests"] > 0 else 0
+        
+        for endpoint, stats in results["endpoints"].items():
+            if stats["response_times"]:
+                stats["min_rt"] = min(stats["response_times"])
+                stats["max_rt"] = max(stats["response_times"])
+                stats["avg_rt"] = statistics.mean(stats["response_times"])
+                stats["p90_rt"] = statistics.quantiles(stats["response_times"], n=10)[8] if len(stats["response_times"]) > 10 else stats["max_rt"]
+                stats["p95_rt"] = statistics.quantiles(stats["response_times"], n=20)[18] if len(stats["response_times"]) > 20 else stats["max_rt"]
+                stats["p99_rt"] = statistics.quantiles(stats["response_times"], n=100)[98] if len(stats["response_times"]) > 100 else stats["max_rt"]
+                stats["error_rate"] = (stats["errors"] / stats["count"] * 100) if stats["count"] > 0 else 0
+                # Remove raw response times from final report
+                del stats["response_times"]
+        
+        return results
+    
+    def generate_html_report(self, summary: Dict[str, Any], output_file: str):
+        """Generate HTML report from summary data"""
+        
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YMS Dashboard Stress Test Report - {summary['tenant']}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        h1, h2 {{ color: #333; }}
+        .summary {{ background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .metric {{ display: inline-block; margin: 10px 20px 10px 0; }}
+        .metric-label {{ font-weight: bold; }}
+        .metric-value {{ font-size: 1.2em; }}
+        .error {{ color: #d9534f; }}
+        .success {{ color: #5cb85c; }}
+        table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background-color: #4CAF50; color: white; }}
+        tr:nth-child(even) {{ background-color: #f2f2f2; }}
+        .warning {{ background-color: #fff3cd; }}
+        .danger {{ background-color: #f8d7da; }}
+    </style>
+</head>
+<body>
+    <h1>YMS Dashboard Stress Test Report</h1>
+    
+    <div class="summary">
+        <h2>Test Summary</h2>
+        <div class="metric">
+            <span class="metric-label">Tenant:</span>
+            <span class="metric-value">{summary['tenant']}</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Test Date:</span>
+            <span class="metric-value">{datetime.fromisoformat(summary['test_date']).strftime('%Y-%m-%d %H:%M:%S')}</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Total Requests:</span>
+            <span class="metric-value">{summary['total_requests']:,}</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Failed Requests:</span>
+            <span class="metric-value {'' if summary['failed_requests'] == 0 else 'error'}">{summary['failed_requests']:,}</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Error Rate:</span>
+            <span class="metric-value {'' if summary['error_rate'] < 1 else 'error'}">{summary['error_rate']:.2f}%</span>
+        </div>
+    </div>
+    
+    <h2>Endpoint Performance</h2>
+    <table>
+        <tr>
+            <th>Endpoint</th>
+            <th>Requests</th>
+            <th>Errors</th>
+            <th>Error Rate</th>
+            <th>Min RT (ms)</th>
+            <th>Avg RT (ms)</th>
+            <th>P90 RT (ms)</th>
+            <th>P95 RT (ms)</th>
+            <th>P99 RT (ms)</th>
+            <th>Max RT (ms)</th>
+        </tr>
+"""
+        
+        for endpoint, stats in summary['endpoints'].items():
+            row_class = ''
+            if stats['error_rate'] > 5:
+                row_class = 'danger'
+            elif stats['error_rate'] > 1:
+                row_class = 'warning'
+            
+            html_content += f"""
+        <tr class="{row_class}">
+            <td>{endpoint}</td>
+            <td>{stats['count']:,}</td>
+            <td>{stats['errors']:,}</td>
+            <td>{stats['error_rate']:.2f}%</td>
+            <td>{stats['min_rt']:.0f}</td>
+            <td>{stats['avg_rt']:.0f}</td>
+            <td>{stats['p90_rt']:.0f}</td>
+            <td>{stats['p95_rt']:.0f}</td>
+            <td>{stats['p99_rt']:.0f}</td>
+            <td>{stats['max_rt']:.0f}</td>
+        </tr>
+"""
+        
+        html_content += """
+    </table>
+    
+    <div class="summary">
+        <h3>SLA Compliance</h3>
+        <p>✓ Response Time SLA (P95 < 2000ms): <span class="metric-value">""" + (
+            "PASS" if all(stats['p95_rt'] < 2000 for stats in summary['endpoints'].values()) else "FAIL"
+        ) + """</span></p>
+        <p>✓ Error Rate SLA (< 1%): <span class="metric-value">""" + (
+            "PASS" if summary['error_rate'] < 1 else "FAIL"
+        ) + """</span></p>
+    </div>
+</body>
+</html>
+"""
+        
+        with open(output_file, 'w') as f:
+            f.write(html_content)
+    
+    def generate_csv_report(self, summary: Dict[str, Any], output_file: str):
+        """Generate CSV report from summary data"""
+        
+        with open(output_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(['Endpoint', 'Total Requests', 'Failed Requests', 'Error Rate (%)', 
+                           'Min RT (ms)', 'Avg RT (ms)', 'P90 RT (ms)', 'P95 RT (ms)', 
+                           'P99 RT (ms)', 'Max RT (ms)'])
+            
+            # Data rows
+            for endpoint, stats in summary['endpoints'].items():
+                writer.writerow([
+                    endpoint,
+                    stats['count'],
+                    stats['errors'],
+                    f"{stats['error_rate']:.2f}",
+                    stats['min_rt'],
+                    f"{stats['avg_rt']:.0f}",
+                    f"{stats['p90_rt']:.0f}",
+                    f"{stats['p95_rt']:.0f}",
+                    f"{stats['p99_rt']:.0f}",
+                    stats['max_rt']
+                ])
+            
+            # Summary row
+            writer.writerow([])
+            writer.writerow(['TOTAL', summary['total_requests'], summary['failed_requests'], 
+                           f"{summary['error_rate']:.2f}"])
+    
+    def generate_all_reports(self, jtl_file: str, tenant: str, test_name: str):
+        """Generate all report formats"""
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Generate summary
+        summary = self.generate_summary_report(jtl_file, tenant)
+        
+        # Save summary JSON
+        summary_file = os.path.join(self.results_dir, "summary", f"{test_name}_{tenant}_{timestamp}.json")
+        with open(summary_file, 'w') as f:
+            json.dump(summary, f, indent=2)
+        
+        # Generate HTML report
+        html_file = os.path.join(self.results_dir, "html", f"{test_name}_{tenant}_{timestamp}.html")
+        self.generate_html_report(summary, html_file)
+        
+        # Generate CSV report
+        csv_file = os.path.join(self.results_dir, "csv", f"{test_name}_{tenant}_{timestamp}.csv")
+        self.generate_csv_report(summary, csv_file)
+        
+        return {
+            "summary": summary_file,
+            "html": html_file,
+            "csv": csv_file
+        }
+```
+
+### 2.8 Updated CLI Tool (cli.py)
+
+```python
+import click
+import json
+from generators.payload_generators import get_generator
+from utils.tenant_manager import TenantManager
+from utils.logger import stress_logger
+from utils.report_generator import ReportGenerator
+from validators.response_validators import ResponseValidator
+
+@click.group()
+def cli():
+    """YMS Dashboard Stress Testing CLI"""
+    pass
+
+@cli.command()
+@click.option('--tenant', required=True, help='Tenant name')
+@click.option('--endpoint', required=True, help='API endpoint name')
+@click.option('--count', default=1, help='Number of payloads to generate')
+@click.option('--output-file', help='Output file for payloads')
+def generate(tenant, endpoint, count, output_file):
+    """Generate test payloads for specified endpoint"""
+    try:
+        stress_logger.info(f"Generating {count} payloads for tenant: {tenant}, endpoint: {endpoint}")
+        
+        manager = TenantManager()
+        tenant_config = manager.get_tenant_config(tenant)
+        
+        generator = get_generator(endpoint, tenant_config)
+        
+        payloads = []
+        for i in range(count):
+            payload = generator.generate()
+            payloads.append(payload)
+            
+            if not output_file:
+                click.echo(json.dumps(payload, indent=2))
+        
+        if output_file:
+            with open(output_file, 'w') as f:
+                json.dump(payloads, f, indent=2)
+            stress_logger.info(f"Saved {count} payloads to {output_file}")
+            
+    except Exception as e:
+        stress_logger.error(f"Failed to generate payloads: {str(e)}", exc_info=e)
+        click.echo(f"Error: {str(e)}", err=True)
+        exit(1)
+
+@cli.command()
+@click.option('--response-file', required=True, type=click.File('r'), help='Response file to validate')
+@click.option('--endpoint', required=True, help='API endpoint name')
+def validate(response_file, endpoint):
+    """Validate API response"""
+    try:
+        validator = ResponseValidator()
+        
+        response_data = json.load(response_file)
+        
+        valid, results = validator.validate_response(
+            endpoint=endpoint,
+            response_code=response_data.get('status_code', 200),
+            response_body=json.dumps(response_data.get('body', {})),
+            response_time=response_data.get('response_time', 0)
+        )
+        
+        click.echo(json.dumps(results, indent=2))
+        
+        if not valid:
+            stress_logger.warning(f"Validation failed for {endpoint}")
+            click.echo("Validation FAILED", err=True)
+            exit(1)
+        else:
+            stress_logger.info(f"Validation passed for {endpoint}")
+            click.echo("Validation PASSED")
+            
+    except Exception as e:
+        stress_logger.error(f"Validation error: {str(e)}", exc_info=e)
+        click.echo(f"Error: {str(e)}", err=True)
+        exit(1)
+
+@cli.command()
+@click.option('--jtl-file', required=True, help='JMeter JTL results file')
+@click.option('--tenant', required=True, help='Tenant name')
+@click.option('--test-name', default='stress-test', help='Test name for report')
+def report(jtl_file, tenant, test_name):
+    """Generate reports from JMeter results"""
+    try:
+        stress_logger.info(f"Generating reports for {test_name} - {tenant}")
+        
+        generator = ReportGenerator()
+        report_files = generator.generate_all_reports(jtl_file, tenant, test_name)
+        
+        click.echo("Reports generated successfully:")
+        click.echo(f"  - Summary: {report_files['summary']}")
+        click.echo(f"  - HTML: {report_files['html']}")
+        click.echo(f"  - CSV: {report_files['csv']}")
+        
+        # Display summary stats
+        with open(report_files['summary'], 'r') as f:
+            summary = json.load(f)
+            click.echo(f"\nTest Summary:")
+            click.echo(f"  Total Requests: {summary['total_requests']:,}")
+            click.echo(f"  Failed Requests: {summary['failed_requests']:,}")
+            click.echo(f"  Error Rate: {summary['error_rate']:.2f}%")
+            
+    except Exception as e:
+        stress_logger.error(f"Report generation failed: {str(e)}", exc_info=e)
+        click.echo(f"Error: {str(e)}", err=True)
+        exit(1)
+
+if __name__ == '__main__':
+    cli()
+```
+
+## 3. Configuration Files
+
+### 3.1 Tenant Configuration (tenant_config.yaml)
+
+```yaml
+tenants:
+  tenant-alpha:
+    name: "tenant-alpha"
+    rpm_config:
+      yard-availability: 100
+      trailer-overview: 150
+      trailer-exception-summary: 80
+      task-workload-summary: 120
+      task-attention-summary: 90
+      site-occupancy: 110
+      shipment-volume-forecast: 70
+      dwell-time-summary: 85
+      door-breakdown-summary: 95
+      detention-summary: 75
+      saved-filter-trailer-count: 60
+    data_pool:
+      facility_ids: [1001, 1002, 1003, 1004, 1005]
+      carrier_ids: [2001, 2002, 2003, 2004, 2005, 2006]
+      user_ids: [3001, 3002, 3003]
+      saved_filter_ids: [4001, 4002, 4003, 4004]
+    auth:
+      token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    sla:
+      response_time_ms: 2000
+      error_rate_percent: 1
+
+  tenant-beta:
+    name: "tenant-beta"
+    rpm_config:
+      yard-availability: 80
+      trailer-overview: 120
+      trailer-exception-summary: 60
+      task-workload-summary: 100
+      task-attention-summary: 70
+      site-occupancy: 90
+      shipment-volume-forecast: 50
+      dwell-time-summary: 65
+      door-breakdown-summary: 75
+      detention-summary: 55
+      saved-filter-trailer-count: 45
+    data_pool:
+      facility_ids: [2001, 2002, 2003]
+      carrier_ids: [3001, 3002, 3003, 3004]
+      user_ids: [4001, 4002]
+      saved_filter_ids: [5001, 5002, 5003]
+    auth:
+      token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    sla:
+      response_time_ms: 2500
+      error_rate_percent: 2
+
+  tenant-gamma:
+    name: "tenant-gamma"
+    rpm_config:
+      yard-availability: 120
+      trailer-overview: 180
+      trailer-exception-summary: 100
+      task-workload-summary: 140
+      task-attention-summary: 110
+      site-occupancy: 130
+      shipment-volume-forecast: 90
+      dwell-time-summary: 105
+      door-breakdown-summary: 115
+      detention-summary: 95
+      saved-filter-trailer-count: 75
+    data_pool:
+      facility_ids: [3001, 3002, 3003, 3004]
+      carrier_ids: [4001, 4002, 4003, 4004, 4005]
+      user_ids: [5001, 5002, 5003, 5004]
+      saved_filter_ids: [6001, 6002, 6003, 6004, 6005]
+    auth:
+      token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    sla:
+      response_time_ms: 1500
+      error_rate_percent: 0.5
+```
+
+### 3.2 Test Scenarios Configuration (test_scenarios.yaml)
+
+```yaml
+scenarios:
+  smoke_test:
+    name: "Smoke Test"
+    description: "Quick validation of all endpoints"
+    duration_minutes: 5
+    ramp_up_seconds: 30
+    tenants: ["tenant-alpha"]
+    load_multiplier: 0.1  # 10% of configured RPM
+
+  load_test:
+    name: "Load Test"
+    description: "Standard load test at expected capacity"
+    duration_minutes: 60
+    ramp_up_seconds: 300
+    tenants: ["tenant-alpha", "tenant-beta", "tenant-gamma"]
+    load_multiplier: 1.0  # 100% of configured RPM
+
+  stress_test:
+    name: "Stress Test"
+    description: "Push system beyond normal capacity"
+    duration_minutes: 30
+    ramp_up_seconds: 180
+    tenants: ["tenant-alpha", "tenant-beta", "tenant-gamma"]
+    load_multiplier: 1.5  # 150% of configured RPM
+
+  endurance_test:
+    name: "Endurance Test"
+    description: "Extended duration test for memory leaks"
+    duration_minutes: 240
+    ramp_up_seconds: 600
+    tenants: ["tenant-alpha", "tenant-beta"]
+    load_multiplier: 0.8  # 80% of configured RPM
+
+  spike_test:
+    name: "Spike Test"
+    description: "Sudden load increase simulation"
+    duration_minutes: 20
+    ramp_up_seconds: 5
+    tenants: ["tenant-alpha", "tenant-beta", "tenant-gamma"]
+    load_multiplier: 2.0  # 200% of configured RPM
+```
+
+## 4. JMeter Integration Script
+
+### 4.1 Groovy Script for Payload Generation (jmeter_integration.groovy)
 
 ```groovy
-import groovy.json.JsonBuilder
+import javax.script.ScriptEngine
+import javax.script.ScriptEngineManager
+import java.nio.file.Paths
 
-/**
- * Generate payload for APIs that only require facilityId
- */
+// Get parameters from JMeter
+String tenant = vars.get("tenant")
+String endpoint = vars.get("endpoint")
+String pythonPath = props.get("python.path", "/usr/bin/python3")
+String frameworkPath = props.get("framework.path", "../python")
 
-def facilityId = vars.get("facility_id") as Integer
+// Build command
+String[] command = [
+    pythonPath,
+    "-m", "cli",
+    "generate",
+    "--tenant", tenant,
+    "--endpoint", endpoint,
+    "--count", "1"
+]
 
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
+// Execute Python script
+ProcessBuilder pb = new ProcessBuilder(command)
+pb.directory(new File(frameworkPath))
+Process process = pb.start()
+
+// Read output
+BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+StringBuilder output = new StringBuilder()
+String line
+while ((line = reader.readLine()) != null) {
+    output.append(line)
 }
 
-vars.put("request_payload", payload.toString())
-log.info("Generated facility request payload: " + payload.toString())
+// Wait for completion
+int exitCode = process.waitFor()
+
+if (exitCode != 0) {
+    log.error("Failed to generate payload: " + output.toString())
+    throw new Exception("Payload generation failed")
+}
+
+// Set the payload in JMeter variable
+vars.put("payload", output.toString())
+log.info("Generated payload for " + endpoint + ": " + output.toString())
 ```
 
-### scripts/payload-generators/trailer-overview-generator.groovy
+### 4.2 Groovy Script for Response Validation (jmeter_validation.groovy)
 
 ```groovy
+import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
-load("scripts/payload-generators/base-payload-generator.groovy")
 
-/**
- * Generate payload for trailer-overview API
- */
+// Get response data from JMeter
+String responseData = prev.getResponseDataAsString()
+int responseCode = prev.getResponseCode() as Integer
+long responseTime = prev.getTime()
+String endpoint = vars.get("endpoint")
 
-def facilityId = vars.get("facility_id") as Integer
-def carrierIdsString = vars.get("carrier_ids")
-def carrierIds = BasePayloadGenerator.parseCarrierIds(carrierIdsString)
+// Prepare validation data
+def validationData = [
+    status_code: responseCode,
+    body: new JsonSlurper().parseText(responseData),
+    response_time: responseTime
+]
 
-// Trailer states enum
-def trailerStates = ["all", "noFlags", "audit", "damaged", "outOfService"]
-def selectedState = BasePayloadGenerator.getRandomElement(trailerStates)
+// Convert to JSON
+String jsonData = new JsonBuilder(validationData).toString()
 
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
-    if (carrierIds.size() > 0) {
-        carrierIds BasePayloadGenerator.getRandomSubset(carrierIds, 5)
-    }
-    trailerState selectedState
+// Execute Python validator
+String pythonPath = props.get("python.path", "/usr/bin/python3")
+String frameworkPath = props.get("framework.path", "../python")
+
+// Create temporary file with response data
+File tempFile = File.createTempFile("response_", ".json")
+tempFile.write(jsonData)
+
+String[] command = [
+    pythonPath,
+    "-m", "cli",
+    "validate",
+    "--response-file", tempFile.absolutePath,
+    "--endpoint", endpoint
+]
+
+ProcessBuilder pb = new ProcessBuilder(command)
+pb.directory(new File(frameworkPath))
+Process process = pb.start()
+
+// Read output
+BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+StringBuilder output = new StringBuilder()
+String line
+while ((line = reader.readLine()) != null) {
+    output.append(line)
 }
 
-vars.put("request_payload", payload.toString())
-log.info("Generated trailer overview payload: " + payload.toString())
-```
+// Wait for completion
+int exitCode = process.waitFor()
 
-### scripts/payload-generators/trailer-exceptions-generator.groovy
+// Clean up temp file
+tempFile.delete()
 
-```groovy
-import groovy.json.JsonBuilder
-load("scripts/payload-generators/base-payload-generator.groovy")
-
-/**
- * Generate payload for trailer-exception-summary API
- */
-
-def facilityId = vars.get("facility_id") as Integer
-def carrierIdsString = vars.get("carrier_ids")
-def carrierIds = BasePayloadGenerator.parseCarrierIds(carrierIdsString)
-
-// Generate random threshold hours
-def thresholdHours = BasePayloadGenerator.getRandomThresholdHours()
-
-// Random boolean for bypassFlagged
-def bypassFlagged = BasePayloadGenerator.random.nextBoolean()
-
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
-    if (carrierIds.size() > 0) {
-        carrierIds BasePayloadGenerator.getRandomSubset(carrierIds, 5)
-    }
-    thresholdHours thresholdHours
-    bypassFlagged bypassFlagged
+// Check validation result
+if (exitCode != 0) {
+    AssertionResult.setFailure(true)
+    AssertionResult.setFailureMessage("Validation failed: " + output.toString())
+} else {
+    log.info("Validation passed for " + endpoint)
 }
-
-vars.put("request_payload", payload.toString())
-log.info("Generated trailer exceptions payload: " + payload.toString())
 ```
 
-### scripts/payload-generators/shipment-forecast-generator.groovy
+## 5. Execution Scripts
 
-```groovy
-import groovy.json.JsonBuilder
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-load("scripts/payload-generators/base-payload-generator.groovy")
-
-/**
- * Generate payload for shipment-volume-forecast API
- */
-
-def facilityId = vars.get("facility_id") as Integer
-
-// Generate date range (next 7 days)
-def startDate = LocalDate.now()
-def endDate = startDate.plusDays(7)
-
-// Shipment directions enum
-def directions = ["INBOUND", "OUTBOUND"]
-def selectedDirection = BasePayloadGenerator.getRandomElement(directions)
-
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
-    startDate startDate.format(DateTimeFormatter.ISO_DATE)
-    endDate endDate.format(DateTimeFormatter.ISO_DATE)
-    shipmentDirection selectedDirection
-}
-
-vars.put("request_payload", payload.toString())
-log.info("Generated shipment forecast payload: " + payload.toString())
-```
-
-### scripts/payload-generators/saved-filter-generator.groovy
-
-```groovy
-import groovy.json.JsonBuilder
-load("scripts/payload-generators/base-payload-generator.groovy")
-
-/**
- * Generate SavedFilterRequestPayloadDTO
- */
-
-def generateSavedFilter() {
-    def filterTypes = ["TRAILER", "TASK", "SHIPMENT", "CARRIER"]
-    def operators = ["EQ", "NEQ", "GT", "LT", "IN", "NOT_IN", "CONTAINS", "STARTS_WITH", "ENDS_WITH"]
-    
-    def filters = []
-    def numFilters = BasePayloadGenerator.random.nextInt(3) + 1
-    
-    for (int i = 0; i < numFilters; i++) {
-        filters << [
-            field: "field_${i}",
-            operator: BasePayloadGenerator.getRandomElement(operators),
-            value: "value_${i}"
-        ]
-    }
-    
-    return [
-        name: "Test Filter ${System.currentTimeMillis()}",
-        type: BasePayloadGenerator.getRandomElement(filterTypes),
-        filters: filters,
-        isDefault: BasePayloadGenerator.random.nextBoolean()
-    ]
-}
-
-// Export for use in other scripts
-return this
-```
-
-## 4. Data Files
-
-### data/tenants.csv
-
-```csv
-tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds
-TENANT_A,Customer Alpha,1200,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQSJ9.signature_a,300
-TENANT_B,Customer Beta,800,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQiJ9.signature_b,180
-TENANT_C,Customer Gamma,1500,Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJURU5BTlRfQyJ9.signature_c,360
-```
-
-### data/facilities.csv
-
-```csv
-tenant_id,facility_id,facility_name,load_weight,carrier_ids
-TENANT_A,101,DC West,0.6,"201,202,203,204,205"
-TENANT_A,102,DC East,0.4,"206,207,208"
-TENANT_B,201,Warehouse North,0.7,"301,302,303"
-TENANT_B,202,Warehouse South,0.3,"304,305,306,307"
-TENANT_C,301,Distribution Hub Central,0.5,"401,402,403,404"
-TENANT_C,302,Distribution Hub East,0.3,"405,406"
-TENANT_C,303,Distribution Hub West,0.2,"407,408,409"
-```
-
-### data/carriers.csv
-
-```csv
-carrier_id,carrier_name,carrier_code
-201,Swift Transportation,SWFT
-202,J.B. Hunt,JBHT
-203,Schneider National,SNDR
-204,Werner Enterprises,WERN
-205,Knight-Swift,KNGT
-301,Prime Inc,PRIM
-302,USA Truck,USAK
-303,Covenant Transport,CVTI
-304,Heartland Express,HTLD
-305,Marten Transport,MRTN
-306,PAM Transport,PTSI
-307,Forward Air,FWRD
-401,Old Dominion,ODFL
-402,XPO Logistics,XPO
-403,YRC Worldwide,YRCW
-404,Estes Express,ESTS
-405,ABF Freight,ABFS
-406,R+L Carriers,RLCA
-407,Saia LTL,SAIA
-408,Holland Regional,HLND
-409,Central Transport,CTII
-```
-
-### data/test-data/trailer-states.csv
-
-```csv
-state_value,state_name,description
-all,All Trailers,All trailers regardless of status
-noFlags,No Flags,Trailers without any flags
-audit,Audit Required,Trailers requiring audit
-damaged,Damaged,Damaged trailers
-outOfService,Out of Service,Trailers out of service
-```
-
-### data/test-data/shipment-directions.csv
-
-```csv
-direction_value,direction_name
-INBOUND,Inbound Shipments
-OUTBOUND,Outbound Shipments
-```
-
-## 5. Shell Scripts
-
-### scripts/setup.sh
+### 5.1 Local Execution Script (run-local.sh)
 
 ```bash
 #!/bin/bash
 
-# YMS Dashboard JMeter Test Setup Script
-# This script sets up the test environment and validates configuration
+# Set variables
+JMETER_HOME="${JMETER_HOME:-/opt/jmeter}"
+TEST_PLAN="jmeter/test-plans/YMS-Dashboard-Master-Test.jmx"
+RESULTS_DIR="results/$(date +%Y%m%d_%H%M%S)"
+LOGS_DIR="logs/jmeter"
+PYTHON_PATH="$(which python3)"
+FRAMEWORK_PATH="$(pwd)/python"
 
-set -e
+# Create directories
+mkdir -p "$RESULTS_DIR"
+mkdir -p "$LOGS_DIR"
 
-echo "================================================"
-echo "YMS Dashboard JMeter Test Framework Setup"
-echo "================================================"
+# Parse command line arguments
+TENANT=""
+SCENARIO="load_test"
+DURATION="300"
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Function to print colored output
-print_status() {
-    if [ "$1" = "OK" ]; then
-        echo -e "${GREEN}✓${NC} $2"
-    elif [ "$1" = "ERROR" ]; then
-        echo -e "${RED}✗${NC} $2"
-    elif [ "$1" = "WARNING" ]; then
-        echo -e "${YELLOW}⚠${NC} $2"
-    else
-        echo "$2"
-    fi
-}
-
-# Check if JMeter is installed
-check_jmeter() {
-    if command -v jmeter &> /dev/null; then
-        JMETER_VERSION=$(jmeter --version 2>&1 | grep -oP 'Version \K[0-9.]+' | head -1)
-        print_status "OK" "JMeter installed (version: $JMETER_VERSION)"
-        
-        # Check minimum version (5.0)
-        MIN_VERSION="5.0"
-        if [ "$(printf '%s\n' "$MIN_VERSION" "$JMETER_VERSION" | sort -V | head -n1)" = "$MIN_VERSION" ]; then
-            print_status "OK" "JMeter version meets minimum requirement (>= $MIN_VERSION)"
-        else
-            print_status "ERROR" "JMeter version $JMETER_VERSION is below minimum requirement ($MIN_VERSION)"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --tenant)
+            TENANT="$2"
+            shift 2
+            ;;
+        --scenario)
+            SCENARIO="$2"
+            shift 2
+            ;;
+        --duration)
+            DURATION="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
             exit 1
-        fi
-    else
-        print_status "ERROR" "JMeter not found. Please install JMeter 5.0 or higher"
-        echo "Download from: https://jmeter.apache.org/download_jmeter.cgi"
-        exit 1
-    fi
-}
+            ;;
+    esac
+done
 
-# Check Java installation
-check_java() {
-    if command -v java &> /dev/null; then
-        JAVA_VERSION=$(java -version 2>&1 | grep -oP 'version "\K[^"]+' | head -1)
-        print_status "OK" "Java installed (version: $JAVA_VERSION)"
-    else
-        print_status "ERROR" "Java not found. JMeter requires Java 8 or higher"
-        exit 1
-    fi
-}
+# Validate tenant
+if [ -z "$TENANT" ]; then
+    echo "Error: --tenant is required"
+    exit 1
+fi
 
-# Create directory structure
-create_directories() {
-    echo ""
-    echo "Creating directory structure..."
-    
-    directories=(
-        "test-plans/api-fragments"
-        "test-plans/load-profiles"
-        "data/test-data"
-        "scripts/payload-generators"
-        "config/test-profiles"
-        "results"
-        "reports"
-        "logs"
-    )
-    
-    for dir in "${directories[@]}"; do
-        if [ ! -d "$dir" ]; then
-            mkdir -p "$dir"
-            print_status "OK" "Created directory: $dir"
-        else
-            print_status "OK" "Directory exists: $dir"
-        fi
-    done
-}
+# Run JMeter test
+echo "Starting stress test for tenant: $TENANT"
+echo "Scenario: $SCENARIO"
+echo "Duration: $DURATION seconds"
+echo "Results will be saved to: $RESULTS_DIR"
 
-# Check data files
-check_data_files() {
-    echo ""
-    echo "Checking data files..."
-    
-    required_files=(
-        "data/tenants.csv"
-        "data/facilities.csv"
-        "data/carriers.csv"
-    )
-    
-    for file in "${required_files[@]}"; do
-        if [ -f "$file" ]; then
-            line_count=$(wc -l < "$file")
-            print_status "OK" "Found $file ($line_count lines)"
-        else
-            print_status "WARNING" "Missing $file - creating template"
-            
-            case "$file" in
-                "data/tenants.csv")
-                    echo "tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds" > "$file"
-                    echo "TENANT_A,Customer Alpha,1200,Bearer token_here,300" >> "$file"
-                    ;;
-                "data/facilities.csv")
-                    echo "tenant_id,facility_id,facility_name,load_weight,carrier_ids" > "$file"
-                    echo "TENANT_A,101,DC West,0.6,\"201,202,203\"" >> "$file"
-                    ;;
-                "data/carriers.csv")
-                    echo "carrier_id,carrier_name,carrier_code" > "$file"
-                    echo "201,Carrier One,CAR1" >> "$file"
-                    ;;
-            esac
-        fi
-    done
-}
+# Run JMeter
+$JMETER_HOME/bin/jmeter -n \
+    -t "$TEST_PLAN" \
+    -Jtenant="$TENANT" \
+    -Jscenario="$SCENARIO" \
+    -Jduration="$DURATION" \
+    -Jpython.path="$PYTHON_PATH" \
+    -Jframework.path="$FRAMEWORK_PATH" \
+    -l "$RESULTS_DIR/results.jtl" \
+    -j "$LOGS_DIR/jmeter_${TENANT}_$(date +%Y%m%d_%H%M%S).log" \
+    -e -o "$RESULTS_DIR/html-report"
 
-# Install JMeter plugins
-install_plugins() {
-    echo ""
-    echo "Checking JMeter plugins..."
-    
-    JMETER_HOME=$(dirname $(dirname $(which jmeter)))
-    PLUGINS_DIR="$JMETER_HOME/lib/ext"
-    
-    # Check for Plugins Manager
-    if [ -f "$PLUGINS_DIR/jmeter-plugins-manager.jar" ]; then
-        print_status "OK" "JMeter Plugins Manager installed"
-    else
-        print_status "WARNING" "JMeter Plugins Manager not found"
-        echo "Download from: https://jmeter-plugins.org/install/Install/"
-    fi
-    
-    # List of recommended plugins
-    recommended_plugins=(
-        "jpgc-graphs-basic"
-        "jpgc-graphs-additional"
-        "jpgc-casutg"
-        "jpgc-tst"
-        "jpgc-dummy"
-    )
-    
-    echo "Recommended plugins:"
-    for plugin in "${recommended_plugins[@]}"; do
-        echo "  - $plugin"
-    done
-}
+# Generate custom reports
+echo "Generating custom reports..."
+cd python
+python -m cli report \
+    --jtl-file "../$RESULTS_DIR/results.jtl" \
+    --tenant "$TENANT" \
+    --test-name "$SCENARIO"
 
-# Create sample JMeter properties
-create_properties() {
-    echo ""
-    echo "Creating JMeter properties files..."
-    
-    # jmeter.properties
-    cat > config/jmeter.properties << 'EOF'
-# JMeter Properties for YMS Dashboard Testing
-
-# Increase memory settings
-HEAP=-Xms2g -Xmx4g -XX:MaxMetaspaceSize=256m
-
-# CSV Data Set Config
-csvdataset.eol.byte=10
-
-# Results file configuration
-jmeter.save.saveservice.output_format=csv
-jmeter.save.saveservice.assertion_results_failure_message=true
-jmeter.save.saveservice.successful=true
-jmeter.save.saveservice.label=true
-jmeter.save.saveservice.response_code=true
-jmeter.save.saveservice.response_message=true
-jmeter.save.saveservice.thread_name=true
-jmeter.save.saveservice.time=true
-jmeter.save.saveservice.subresults=true
-jmeter.save.saveservice.assertions=true
-jmeter.save.saveservice.latency=true
-jmeter.save.saveservice.connect_time=true
-jmeter.save.saveservice.samplerData=false
-jmeter.save.saveservice.responseHeaders=false
-jmeter.save.saveservice.requestHeaders=false
-jmeter.save.saveservice.encoding=false
-jmeter.save.saveservice.bytes=true
-jmeter.save.saveservice.sent_bytes=true
-jmeter.save.saveservice.url=true
-jmeter.save.saveservice.filename=true
-jmeter.save.saveservice.hostname=true
-jmeter.save.saveservice.thread_counts=true
-jmeter.save.saveservice.sample_count=true
-jmeter.save.saveservice.idle_time=true
-
-# Backend Listener
-backend_metrics_window=100
-EOF
-    
-    print_status "OK" "Created config/jmeter.properties"
-    
-    # user.properties
-    cat > config/user.properties << 'EOF'
-# User Properties for YMS Dashboard Testing
-
-# Default values (can be overridden via command line)
-base.url=http://localhost:5003
-test.duration=3600
-rpm.multiplier=1.0
-
-# Thread settings
-thread.rampup.factor=0.2
-thread.initial.delay=0
-
-# Timeouts
-http.connection.timeout=5000
-http.response.timeout=30000
-
-# Retry settings
-retry.max.attempts=3
-retry.delay.ms=1000
-EOF
-    
-    print_status "OK" "Created config/user.properties"
-}
-
-# Create test profile configurations
-create_test_profiles() {
-    echo ""
-    echo "Creating test profile configurations..."
-    
-    # Smoke test profile
-    cat > config/test-profiles/smoke-test.properties << 'EOF'
-# Smoke Test Profile
-test.duration=300
-rpm.multiplier=0.1
-thread.count.max=10
-EOF
-    
-    # Load test profile
-    cat > config/test-profiles/load-test.properties << 'EOF'
-# Load Test Profile
-test.duration=3600
-rpm.multiplier=1.0
-thread.count.max=100
-EOF
-    
-    # Stress test profile
-    cat > config/test-profiles/stress-test.properties << 'EOF'
-# Stress Test Profile
-test.duration=7200
-rpm.multiplier=1.5
-thread.count.max=200
-EOF
-    
-    print_status "OK" "Created test profiles"
-}
-
-# Validate tenant configuration
-validate_tenant_config() {
-    echo ""
-    echo "Validating tenant configuration..."
-    
-    if [ -f "data/tenants.csv" ] && [ -f "data/facilities.csv" ]; then
-        # Check if tenants in facilities.csv match tenants.csv
-        tenant_ids_tenants=$(tail -n +2 data/tenants.csv | cut -d',' -f1 | sort | uniq)
-        tenant_ids_facilities=$(tail -n +2 data/facilities.csv | cut -d',' -f1 | sort | uniq)
-        
-        all_good=true
-        while IFS= read -r tenant; do
-            if ! echo "$tenant_ids_tenants" | grep -q "^$tenant$"; then
-                print_status "ERROR" "Tenant $tenant in facilities.csv not found in tenants.csv"
-                all_good=false
-            fi
-        done <<< "$tenant_ids_facilities"
-        
-        if $all_good; then
-            print_status "OK" "Tenant configuration validated"
-        fi
-    else
-        print_status "WARNING" "Cannot validate tenant configuration - files missing"
-    fi
-}
-
-# Main setup flow
-main() {
-    echo "Starting setup process..."
-    echo ""
-    
-    # System checks
-    check_java
-    check_jmeter
-    
-    # Create structure
-    create_directories
-    
-    # Check and create data files
-    check_data_files
-    
-    # Create properties
-    create_properties
-    create_test_profiles
-    
-    # Validate configuration
-    validate_tenant_config
-    
-    # Install plugins
-    install_plugins
-    
-    echo ""
-    echo "================================================"
-    echo "Setup completed!"
-    echo "================================================"
-    echo ""
-    echo "Next steps:"
-    echo "1. Update data/tenants.csv with your tenant configurations"
-    echo "2. Update data/facilities.csv with facility mappings"
-    echo "3. Update data/carriers.csv with carrier information"
-    echo "4. Add authentication tokens to data/tenants.csv"
-    echo "5. Run: ./scripts/run-test.sh --help"
-    echo ""
-}
-
-# Run main function
-main
+echo "Test completed. Results available in: $RESULTS_DIR"
+echo "View HTML report: $RESULTS_DIR/html-report/index.html"
+echo "View custom report: reports/html/"
 ```
 
-### scripts/run-test.sh
+### 5.2 Distributed Execution Script (run-distributed.sh)
 
 ```bash
 #!/bin/bash
 
-# YMS Dashboard JMeter Test Runner
-# Main script to execute load tests with various configurations
+# Set variables
+JMETER_HOME="${JMETER_HOME:-/opt/jmeter}"
+TEST_PLAN="jmeter/test-plans/YMS-Dashboard-Master-Test.jmx"
+RESULTS_DIR="results/distributed_$(date +%Y%m%d_%H%M%S)"
+LOGS_DIR="logs/jmeter"
+PYTHON_PATH="$(which python3)"
+FRAMEWORK_PATH="$(pwd)/python"
 
-set -e
+# JMeter distributed settings
+REMOTE_HOSTS="${REMOTE_HOSTS:-localhost:1099,localhost:2099}"
 
-# Default values
-BASE_URL="http://localhost:5003"
-TEST_DURATION=3600
-RPM_MULTIPLIER=1.0
-TEST_PLAN="test-plans/yms-dashboard-main.jmx"
-REPORT_NAME="yms-test-$(date +%Y%m%d_%H%M%S)"
+# Create directories
+mkdir -p "$RESULTS_DIR"
+mkdir -p "$LOGS_DIR"
+
+# Parse command line arguments
 TENANTS=""
-TEST_PROFILE=""
-DRY_RUN=false
-GUI_MODE=false
-DISTRIBUTED=false
-EXCLUDED_APIS=""
+SCENARIO="load_test"
 
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-# Function to display usage
-usage() {
-    cat << EOF
-Usage: $0 [OPTIONS]
-
-YMS Dashboard JMeter Test Runner
-
-OPTIONS:
-    -b, --base-url URL          Base URL for the API (default: $BASE_URL)
-    -d, --duration SECONDS      Test duration in seconds (default: $TEST_DURATION)
-    -r, --rpm-multiplier FLOAT  RPM multiplier (default: $RPM_MULTIPLIER)
-    -t, --tenants TENANT_LIST   Comma-separated list of tenant IDs to test
-    -p, --profile PROFILE       Test profile to use (smoke-test|load-test|stress-test)
-    -n, --report-name NAME      Report name (default: auto-generated)
-    -e, --exclude-apis APIS     Comma-separated list of APIs to exclude
-    --test-plan FILE            JMeter test plan file to use
-    --dry-run                   Validate configuration without running tests
-    --gui                       Run JMeter in GUI mode
-    --distributed               Run in distributed mode
-    -h, --help                  Display this help message
-
-EXAMPLES:
-    # Run a basic load test
-    $0 --base-url https://api.example.com --duration 3600
-
-    # Run smoke test for specific tenants
-    $0 --profile smoke-test --tenants TENANT_A,TENANT_B
-
-    # Run stress test with increased load
-    $0 --profile stress-test --rpm-multiplier 1.5
-
-    # Exclude specific APIs from test
-    $0 --exclude-apis "yard-availability,trailer-overview"
-
-    # Dry run to validate configuration
-    $0 --dry-run --tenants TENANT_A
-
-EOF
-}
-
-# Function to parse command line arguments
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -b|--base-url)
-                BASE_URL="$2"
-                shift 2
-                ;;
-            -d|--duration)
-                TEST_DURATION="$2"
-                shift 2
-                ;;
-            -r|--rpm-multiplier)
-                RPM_MULTIPLIER="$2"
-                shift 2
-                ;;
-            -t|--tenants)
-                TENANTS="$2"
-                shift 2
-                ;;
-            -p|--profile)
-                TEST_PROFILE="$2"
-                shift 2
-                ;;
-            -n|--report-name)
-                REPORT_NAME="$2"
-                shift 2
-                ;;
-            -e|--exclude-apis)
-                EXCLUDED_APIS="$2"
-                shift 2
-                ;;
-            --test-plan)
-                TEST_PLAN="$2"
-                shift 2
-                ;;
-            --dry-run)
-                DRY_RUN=true
-                shift
-                ;;
-            --gui)
-                GUI_MODE=true
-                shift
-                ;;
-            --distributed)
-                DISTRIBUTED=true
-                shift
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                echo "Unknown option: $1"
-                usage
-                exit 1
-                ;;
-        esac
-    done
-}
-
-# Function to print colored output
-print_status() {
-    local status=$1
-    local message=$2
-    
-    case $status in
-        "INFO")
-            echo -e "${BLUE}[INFO]${NC} $message"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --tenants)
+            TENANTS="$2"
+            shift 2
             ;;
-        "OK")
-            echo -e "${GREEN}[OK]${NC} $message"
+        --scenario)
+            SCENARIO="$2"
+            shift 2
             ;;
-        "ERROR")
-            echo -e "${RED}[ERROR]${NC} $message"
+        --remote-hosts)
+            REMOTE_HOSTS="$2"
+            shift 2
             ;;
-        "WARNING")
-            echo -e "${YELLOW}[WARNING]${NC} $message"
+        *)
+            echo "Unknown option: $1"
+            exit 1
             ;;
     esac
-}
+done
 
-# Function to validate prerequisites
-validate_prerequisites() {
-    print_status "INFO" "Validating prerequisites..."
-    
-    # Check if JMeter is available
-    if ! command -v jmeter &> /dev/null; then
-        print_status "ERROR" "JMeter not found in PATH"
-        exit 1
-    fi
-    
-    # Check if test plan exists
-    if [ ! -f "$TEST_PLAN" ]; then
-        print_status "ERROR" "Test plan not found: $TEST_PLAN"
-        exit 1
-    fi
-    
-    # Check data files
-    local required_files=("data/tenants.csv" "data/facilities.csv" "data/carriers.csv")
-    for file in "${required_files[@]}"; do
-        if [ ! -f "$file" ]; then
-            print_status "ERROR" "Required data file not found: $file"
-            exit 1
-        fi
-    done
-    
-    print_status "OK" "Prerequisites validated"
-}
+# Start distributed test
+echo "Starting distributed stress test"
+echo "Tenants: $TENANTS"
+echo "Scenario: $SCENARIO"
+echo "Remote hosts: $REMOTE_HOSTS"
 
-# Function to load test profile
-load_test_profile() {
-    if [ -n "$TEST_PROFILE" ]; then
-        local profile_file="config/test-profiles/${TEST_PROFILE}.properties"
+# Run distributed test
+$JMETER_HOME/bin/jmeter -n \
+    -t "$TEST_PLAN" \
+    -R "$REMOTE_HOSTS" \
+    -Gtenants="$TENANTS" \
+    -Gscenario="$SCENARIO" \
+    -Gpython.path="$PYTHON_PATH" \
+    -Gframework.path="$FRAMEWORK_PATH" \
+    -l "$RESULTS_DIR/results.jtl" \
+    -j "$LOGS_DIR/jmeter_distributed_$(date +%Y%m%d_%H%M%S).log" \
+    -e -o "$RESULTS_DIR/html-report"
+
+# Generate reports for each tenant
+IFS=',' read -ra TENANT_ARRAY <<< "$TENANTS"
+for tenant in "${TENANT_ARRAY[@]}"; do
+    echo "Generating report for tenant: $tenant"
+    cd python
+    python -m cli report \
+        --jtl-file "../$RESULTS_DIR/results.jtl" \
+        --tenant "$tenant" \
+        --test-name "$SCENARIO"
+    cd ..
+done
+
+echo "Test completed. Results available in: $RESULTS_DIR"
+```
+
+### 5.3 Report Analysis Script (analyze-results.py)
+
+```python
+#!/usr/bin/env python3
+
+import sys
+import json
+import csv
+from datetime import datetime
+from pathlib import Path
+
+def analyze_results(results_dir):
+    """Analyze all test results and generate comparison report"""
+    
+    results_path = Path(results_dir)
+    summary_files = list(results_path.glob("summary/*.json"))
+    
+    if not summary_files:
+        print("No summary files found")
+        return
+    
+    # Load all summaries
+    summaries = []
+    for file in summary_files:
+        with open(file, 'r') as f:
+            summaries.append(json.load(f))
+    
+    # Sort by date
+    summaries.sort(key=lambda x: x['test_date'])
+    
+    # Generate comparison report
+    print("\n=== YMS Dashboard Stress Test Analysis ===\n")
+    print(f"Total tests analyzed: {len(summaries)}")
+    print(f"Date range: {summaries[0]['test_date']} to {summaries[-1]['test_date']}\n")
+    
+    # Tenant summary
+    tenants = {}
+    for summary in summaries:
+        tenant = summary['tenant']
+        if tenant not in tenants:
+            tenants[tenant] = {
+                'tests': 0,
+                'total_requests': 0,
+                'total_errors': 0,
+                'avg_error_rate': []
+            }
         
-        if [ -f "$profile_file" ]; then
-            print_status "INFO" "Loading test profile: $TEST_PROFILE"
-            
-            # Source the profile file and override variables
-            while IFS='=' read -r key value; do
-                # Skip comments and empty lines
-                [[ $key =~ ^#.*$ ]] && continue
-                [[ -z $key ]] && continue
-                
-                # Remove any surrounding whitespace
-                key=$(echo "$key" | xargs)
-                value=$(echo "$value" | xargs)
-                
-                case $key in
-                    "test.duration")
-                        TEST_DURATION=$value
-                        ;;
-                    "rpm.multiplier")
-                        RPM_MULTIPLIER=$value
-                        ;;
-                esac
-            done < "$profile_file"
-            
-            print_status "OK" "Test profile loaded"
-        else
-            print_status "ERROR" "Test profile not found: $profile_file"
-            exit 1
-        fi
-    fi
-}
+        tenants[tenant]['tests'] += 1
+        tenants[tenant]['total_requests'] += summary['total_requests']
+        tenants[tenant]['total_errors'] += summary['failed_requests']
+        tenants[tenant]['avg_error_rate'].append(summary['error_rate'])
+    
+    print("=== Tenant Summary ===")
+    for tenant, stats in tenants.items():
+        avg_error = sum(stats['avg_error_rate']) / len(stats['avg_error_rate'])
+        print(f"\n{tenant}:")
+        print(f"  Tests run: {stats['tests']}")
+        print(f"  Total requests: {stats['total_requests']:,}")
+        print(f"  Total errors: {stats['total_errors']:,}")
+        print(f"  Average error rate: {avg_error:.2f}%")
+    
+    # Endpoint performance trends
+    print("\n=== Endpoint Performance Trends ===")
+    endpoint_stats = {}
+    
+    for summary in summaries:
+        for endpoint, stats in summary['endpoints'].items():
+            if endpoint not in endpoint_stats:
+                endpoint_stats[endpoint] = {
+                    'p95_times': [],
+                    'error_rates': []
+                }
+            endpoint_stats[endpoint]['p95_times'].append(stats['p95_rt'])
+            endpoint_stats[endpoint]['error_rates'].append(stats['error_rate'])
+    
+    for endpoint, stats in endpoint_stats.items():
+        avg_p95 = sum(stats['p95_times']) / len(stats['p95_times'])
+        avg_error = sum(stats['error_rates']) / len(stats['error_rates'])
+        print(f"\n{endpoint}:")
+        print(f"  Average P95 response time: {avg_p95:.0f}ms")
+        print(f"  Average error rate: {avg_error:.2f}%")
 
-# Function to validate tenant configuration
-validate_tenant_config() {
-    if [ -n "$TENANTS" ]; then
-        print_status "INFO" "Validating tenant configuration..."
-        
-        IFS=',' read -ra TENANT_ARRAY <<< "$TENANTS"
-        for tenant in "${TENANT_ARRAY[@]}"; do
-            if ! grep -q "^$tenant," data/tenants.csv; then
-                print_status "ERROR" "Tenant not found in configuration: $tenant"
-                exit 1
-            fi
-        done
-        
-        print_status "OK" "Tenant configuration validated"
-    fi
-}
-
-# Function to create results directory
-create_results_dir() {
-    local results_dir="results/$REPORT_NAME"
-    local reports_dir="reports/$REPORT_NAME"
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python analyze-results.py <results_directory>")
+        sys.exit(1)
     
-    mkdir -p "$results_dir"
-    mkdir -p "$reports_dir"
-    mkdir -p "logs"
-    
-    print_status "OK" "Created results directory: $results_dir"
-    print_status "OK" "Created reports directory: $reports_dir"
-}
-
-# Function to build JMeter command
-build_jmeter_command() {
-    local cmd="jmeter"
-    
-    # Add non-GUI flag unless GUI mode is requested
-    if [ "$GUI_MODE" = false ]; then
-        cmd+=" -n"
-    fi
-    
-    # Add test plan
-    cmd+=" -t $TEST_PLAN"
-    
-    # Add log file
-    cmd+=" -j logs/jmeter_${REPORT_NAME}.log"
-    
-    # Add results file
-    cmd+=" -l results/${REPORT_NAME}/results.jtl"
-    
-    # Add HTML report generation
-    if [ "$GUI_MODE" = false ]; then
-        cmd+=" -e -o reports/${REPORT_NAME}"
-    fi
-    
-    # Add properties
-    cmd+=" -Jbase.url=$BASE_URL"
-    cmd+=" -Jtest.duration=$TEST_DURATION"
-    cmd+=" -Jrpm.multiplier=$RPM_MULTIPLIER"
-    
-    # Add tenant filter if specified
-    if [ -n "$TENANTS" ]; then
-        cmd+=" -Jtenants.filter=$TENANTS"
-    fi
-    
-    # Add excluded APIs if specified
-    if [ -n "$EXCLUDED_APIS" ]; then
-        cmd+=" -Jexcluded.apis=$EXCLUDED_APIS"
-    fi
-    
-    # Add user properties file
-    if [ -f "config/user.properties" ]; then
-        cmd+=" -q config/user.properties"
-    fi
-    
-    # Add JMeter properties file
-    if [ -f "config/jmeter.properties" ]; then
-        cmd+=" -p config/jmeter.properties"
-    fi
-    
-    echo "$cmd"
-}
-
-# Function to display test configuration
-display_test_config() {
-    echo ""
-    echo "================================================"
-    echo "YMS Dashboard Load Test Configuration"
-    echo "================================================"
-    echo "Base URL:        $BASE_URL"
-    echo "Duration:        $TEST_DURATION seconds"
-    echo "RPM Multiplier:  $RPM_MULTIPLIER"
-    echo "Test Plan:       $TEST_PLAN"
-    echo "Report Name:     $REPORT_NAME"
-    
-    if [ -n "$TENANTS" ]; then
-        echo "Tenants:         $TENANTS"
-    else
-        echo "Tenants:         ALL"
-    fi
-    
-    if [ -n "$TEST_PROFILE" ]; then
-        echo "Test Profile:    $TEST_PROFILE"
-    fi
-    
-    if [ -n "$EXCLUDED_APIS" ]; then
-        echo "Excluded APIs:   $EXCLUDED_APIS"
-    fi
-    
-    if [ "$DISTRIBUTED" = true ]; then
-        echo "Mode:            Distributed"
-    elif [ "$GUI_MODE" = true ]; then
-        echo "Mode:            GUI"
-    else
-        echo "Mode:            Non-GUI"
-    fi
-    
-    echo "================================================"
-    echo ""
-}
-
-# Function to run the test
-run_test() {
-    if [ "$DRY_RUN" = true ]; then
-        print_status "INFO" "DRY RUN - Test would execute with the following command:"
-        echo "$(build_jmeter_command)"
-        return 0
-    fi
-    
-    print_status "INFO" "Starting load test..."
-    
-    # Create results directories
-    create_results_dir
-    
-    # Build and execute JMeter command
-    local jmeter_cmd=$(build_jmeter_command)
-    
-    print_status "INFO" "Executing: $jmeter_cmd"
-    echo ""
-    
-    # Run JMeter
-    if eval "$jmeter_cmd"; then
-        print_status "OK" "Test completed successfully"
-        
-        if [ "$GUI_MODE" = false ]; then
-            print_status "INFO" "Results saved to: results/${REPORT_NAME}/results.jtl"
-            print_status "INFO" "HTML report available at: reports/${REPORT_NAME}/index.html"
-        fi
-    else
-        print_status "ERROR" "Test execution failed"
-        exit 1
-    fi
-}
-
-# Function to generate summary report
-generate_summary() {
-    if [ "$GUI_MODE" = false ] && [ "$DRY_RUN" = false ]; then
-        local results_file="results/${REPORT_NAME}/results.jtl"
-        
-        if [ -f "$results_file" ]; then
-            print_status "INFO" "Generating summary report..."
-            
-            # Create summary file
-            local summary_file="reports/${REPORT_NAME}/summary.txt"
-            
-            {
-                echo "YMS Dashboard Load Test Summary"
-                echo "==============================="
-                echo "Test Name: $REPORT_NAME"
-                echo "Start Time: $(head -n 2 "$results_file" | tail -n 1 | cut -d',' -f1)"
-                echo "Base URL: $BASE_URL"
-                echo "Duration: $TEST_DURATION seconds"
-                echo "RPM Multiplier: $RPM_MULTIPLIER"
-                echo ""
-                echo "Results Summary:"
-                echo "---------------"
-                
-                # Calculate basic statistics using awk
-                awk -F',' '
-                    NR>1 {
-                        total++
-                        sum+=$2
-                        if ($4=="true") success++
-                        if ($2>max || NR==2) max=$2
-                        if ($2<min || NR==2) min=$2
-                    }
-                    END {
-                        print "Total Samples: " total
-                        print "Success Rate: " (success/total*100) "%"
-                        print "Average Response Time: " (sum/total) " ms"
-                        print "Min Response Time: " min " ms"
-                        print "Max Response Time: " max " ms"
-                    }
-                ' "$results_file"
-                
-            } > "$summary_file"
-            
-            print_status "OK" "Summary report saved to: $summary_file"
-            
-            # Display summary
-            echo ""
-            cat "$summary_file"
-        fi
-    fi
-}
-
-# Main execution
-main() {
-    # Parse command line arguments
-    parse_args "$@"
-    
-    # Display header
-    echo "================================================"
-    echo "YMS Dashboard JMeter Test Runner"
-    echo "================================================"
-    
-    # Validate prerequisites
-    validate_prerequisites
-    
-    # Load test profile if specified
-    load_test_profile
-    
-    # Validate tenant configuration
-    validate_tenant_config
-    
-    # Display test configuration
-    display_test_config
-    
-    # Ask for confirmation unless in dry-run mode
-    if [ "$DRY_RUN" = false ] && [ "$GUI_MODE" = false ]; then
-        read -p "Do you want to proceed with the test? (y/n) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_status "INFO" "Test cancelled by user"
-            exit 0
-        fi
-    fi
-    
-    # Run the test
-    run_test
-    
-    # Generate summary report
-    generate_summary
-    
-    echo ""
-    echo "================================================"
-    echo "Test execution completed!"
-    echo "================================================"
-}
-
-# Execute main function
-main "$@"
+    analyze_results(sys.argv[1])
 ```
-
-### scripts/run-distributed.sh
-
-```bash
-#!/bin/bash
-
-# YMS Dashboard Distributed JMeter Test Runner
-# Script for running JMeter tests in distributed mode
-
-set -e
-
-# Configuration
-MASTER_HOST="localhost"
-SLAVE_HOSTS=""
-SLAVE_PORT=1099
-TEST_SCRIPT="./scripts/run-test.sh"
-JMETER_HOME="${JMETER_HOME:-$(dirname $(dirname $(which jmeter)))}"
-
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-# Function to display usage
-usage() {
-    cat << EOF
-Usage: $0 [OPTIONS]
-
-YMS Dashboard Distributed JMeter Test Runner
-
-OPTIONS:
-    -m, --master HOST           Master host (default: localhost)
-    -s, --slaves HOSTS          Comma-separated list of slave hosts
-    -p, --port PORT             RMI port for slaves (default: 1099)
-    --start-slaves              Start JMeter server on slave machines
-    --stop-slaves               Stop JMeter server on slave machines
-    --check-slaves              Check status of slave machines
-    All other options are passed to run-test.sh
-
-EXAMPLES:
-    # Start slave servers
-    $0 --slaves slave1,slave2,slave3 --start-slaves
-
-    # Run distributed test
-    $0 --slaves slave1,slave2,slave3 --base-url https://api.example.com --duration 3600
-
-    # Check slave status
-    $0 --slaves slave1,slave2,slave3 --check-slaves
-
-EOF
-}
-
-# Function to print colored output
-print_status() {
-    local status=$1
-    local message=$2
-    
-    case $status in
-        "INFO")
-            echo -e "${BLUE}[INFO]${NC} $message"
-            ;;
-        "OK")
-            echo -e "${GREEN}[OK]${NC} $message"
-            ;;
-        "ERROR")
-            echo -e "${RED}[ERROR]${NC} $message"
-            ;;
-        "WARNING")
-            echo -e "${YELLOW}[WARNING]${NC} $message"
-            ;;
-    esac
-}
-
-# Function to start slave servers
-start_slaves() {
-    if [ -z "$SLAVE_HOSTS" ]; then
-        print_status "ERROR" "No slave hosts specified"
-        exit 1
-    fi
-    
-    print_status "INFO" "Starting JMeter servers on slave machines..."
-    
-    IFS=',' read -ra SLAVES <<< "$SLAVE_HOSTS"
-    for slave in "${SLAVES[@]}"; do
-        print_status "INFO" "Starting server on $slave..."
-        
-        if [ "$slave" = "localhost" ]; then
-            # Start local server
-            nohup "$JMETER_HOME/bin/jmeter-server" \
-                -Dserver.rmi.localport=$SLAVE_PORT \
-                -Dserver_port=$SLAVE_PORT \
-                > "logs/jmeter-server-$slave.log" 2>&1 &
-            
-            print_status "OK" "Started local JMeter server (PID: $!)"
-        else
-            # Start remote server via SSH
-            ssh "$slave" "nohup $JMETER_HOME/bin/jmeter-server \
-                -Dserver.rmi.localport=$SLAVE_PORT \
-                -Dserver_port=$SLAVE_PORT \
-                > /tmp/jmeter-server.log 2>&1 &"
-            
-            if [ $? -eq 0 ]; then
-                print_status "OK" "Started JMeter server on $slave"
-            else
-                print_status "ERROR" "Failed to start server on $slave"
-            fi
-        fi
-    done
-}
-
-# Function to stop slave servers
-stop_slaves() {
-    if [ -z "$SLAVE_HOSTS" ]; then
-        print_status "ERROR" "No slave hosts specified"
-        exit 1
-    fi
-    
-    print_status "INFO" "Stopping JMeter servers on slave machines..."
-    
-    IFS=',' read -ra SLAVES <<< "$SLAVE_HOSTS"
-    for slave in "${SLAVES[@]}"; do
-        print_status "INFO" "Stopping server on $slave..."
-        
-        if [ "$slave" = "localhost" ]; then
-            # Stop local server
-            pkill -f "jmeter-server" || true
-            print_status "OK" "Stopped local JMeter server"
-        else
-            # Stop remote server via SSH
-            ssh "$slave" "pkill -f jmeter-server || true"
-            
-            if [ $? -eq 0 ]; then
-                print_status "OK" "Stopped JMeter server on $slave"
-            else
-                print_status "WARNING" "Could not stop server on $slave (may not be running)"
-            fi
-        fi
-    done
-}
-
-# Function to check slave status
-check_slaves() {
-    if [ -z "$SLAVE_HOSTS" ]; then
-        print_status "ERROR" "No slave hosts specified"
-        exit 1
-    fi
-    
-    print_status "INFO" "Checking JMeter servers on slave machines..."
-    echo ""
-    
-    IFS=',' read -ra SLAVES <<< "$SLAVE_HOSTS"
-    for slave in "${SLAVES[@]}"; do
-        echo -n "Checking $slave... "
-        
-        # Try to connect to the RMI port
-        if timeout 5 bash -c "echo >/dev/tcp/$slave/$SLAVE_PORT" 2>/dev/null; then
-            echo -e "${GREEN}ONLINE${NC}"
-        else
-            echo -e "${RED}OFFLINE${NC}"
-        fi
-    done
-    echo ""
-}
-
-# Function to run distributed test
-run_distributed_test() {
-    print_status "INFO" "Running distributed test with slaves: $SLAVE_HOSTS"
-    
-    # Build remote hosts parameter for JMeter
-    export JVM_ARGS="-Dremote_hosts=$SLAVE_HOSTS"
-    
-    # Add distributed flag and run test
-    $TEST_SCRIPT --distributed "$@"
-}
-
-# Main execution
-main() {
-    local START_SLAVES=false
-    local STOP_SLAVES=false
-    local CHECK_SLAVES=false
-    local TEST_ARGS=()
-    
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -m|--master)
-                MASTER_HOST="$2"
-                shift 2
-                ;;
-            -s|--slaves)
-                SLAVE_HOSTS="$2"
-                shift 2
-                ;;
-            -p|--port)
-                SLAVE_PORT="$2"
-                shift 2
-                ;;
-            --start-slaves)
-                START_SLAVES=true
-                shift
-                ;;
-            --stop-slaves)
-                STOP_SLAVES=true
-                shift
-                ;;
-            --check-slaves)
-                CHECK_SLAVES=true
-                shift
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            *)
-                # Pass other arguments to run-test.sh
-                TEST_ARGS+=("$1")
-                shift
-                ;;
-        esac
-    done
-    
-    # Execute requested action
-    if [ "$START_SLAVES" = true ]; then
-        start_slaves
-    elif [ "$STOP_SLAVES" = true ]; then
-        stop_slaves
-    elif [ "$CHECK_SLAVES" = true ]; then
-        check_slaves
-    else
-        # Run distributed test
-        if [ -z "$SLAVE_HOSTS" ]; then
-            print_status "ERROR" "No slave hosts specified for distributed test"
-            usage
-            exit 1
-        fi
-        
-        run_distributed_test "${TEST_ARGS[@]}"
-    fi
-}
-
-# Execute main function
-main "$@"
-```
-
-## 6. Additional API Fragments
-
-### api-fragments/trailer-overview.jmx
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
-  <hashTree>
-    <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Trailer Overview API" enabled="true"/>
-    <hashTree>
-      
-      <!-- JSR223 PreProcessor -->
-      <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Generate Trailer Overview Payload" enabled="true">
-        <stringProp name="scriptLanguage">groovy</stringProp>
-        <stringProp name="filename">scripts/payload-generators/trailer-overview-generator.groovy</stringProp>
-        <stringProp name="cacheKey">true</stringProp>
-      </JSR223PreProcessor>
-      <hashTree/>
-      
-      <!-- HTTP Request -->
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Trailer Overview" enabled="true">
-        <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-        <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-          <collectionProp name="Arguments.arguments">
-            <elementProp name="" elementType="HTTPArgument">
-              <boolProp name="HTTPArgument.always_encode">false</boolProp>
-              <stringProp name="Argument.value">${request_payload}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-          </collectionProp>
-        </elementProp>
-        <stringProp name="HTTPSampler.path">/yms-dashboard-service/api/v1/trailer-overview</stringProp>
-        <stringProp name="HTTPSampler.method">POST</stringProp>
-        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
-        <stringProp name="HTTPSampler.response_timeout">30000</stringProp>
-      </HTTPSamplerProxy>
-      <hashTree>
-        <!-- Headers -->
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="API Headers" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="Authorization" elementType="Header">
-              <stringProp name="Header.name">Authorization</stringProp>
-              <stringProp name="Header.value">${auth_token}</stringProp>
-            </elementProp>
-            <elementProp name="tenant" elementType="Header">
-              <stringProp name="Header.name">tenant</stringProp>
-              <stringProp name="Header.value">${tenant_id}</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
-        <hashTree/>
-        
-        <!-- Assertions -->
-        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code Assertion" enabled="true">
-          <collectionProp name="Asserion.test_strings">
-            <stringProp name="49586">200</stringProp>
-          </collectionProp>
-          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
-          <intProp name="Assertion.test_type">8</intProp>
-        </ResponseAssertion>
-        <hashTree/>
-        
-        <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
-          <stringProp name="DurationAssertion.duration">2000</stringProp>
-        </DurationAssertion>
-        <hashTree/>
-      </hashTree>
-    </hashTree>
-  </hashTree>
-</jmeterTestPlan>
-```
-
-### api-fragments/shipment-forecast.jmx
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
-  <hashTree>
-    <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Shipment Volume Forecast API" enabled="true"/>
-    <hashTree>
-      
-      <!-- JSR223 PreProcessor -->
-      <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Generate Shipment Forecast Payload" enabled="true">
-        <stringProp name="scriptLanguage">groovy</stringProp>
-        <stringProp name="filename">scripts/payload-generators/shipment-forecast-generator.groovy</stringProp>
-        <stringProp name="cacheKey">true</stringProp>
-      </JSR223PreProcessor>
-      <hashTree/>
-      
-      <!-- HTTP Request -->
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Shipment Volume Forecast" enabled="true">
-        <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-        <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-          <collectionProp name="Arguments.arguments">
-            <elementProp name="" elementType="HTTPArgument">
-              <boolProp name="HTTPArgument.always_encode">false</boolProp>
-              <stringProp name="Argument.value">${request_payload}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-          </collectionProp>
-        </elementProp>
-        <stringProp name="HTTPSampler.path">/yms-dashboard-service/api/v1/shipment-volume-forecast</stringProp>
-        <stringProp name="HTTPSampler.method">POST</stringProp>
-        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
-        <stringProp name="HTTPSampler.response_timeout">30000</stringProp>
-      </HTTPSamplerProxy>
-      <hashTree>
-        <!-- Headers -->
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="API Headers" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="Authorization" elementType="Header">
-              <stringProp name="Header.name">Authorization</stringProp>
-              <stringProp name="Header.value">${auth_token}</stringProp>
-            </elementProp>
-            <elementProp name="tenant" elementType="Header">
-              <stringProp name="Header.name">tenant</stringProp>
-              <stringProp name="Header.value">${tenant_id}</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
-        <hashTree/>
-        
-        <!-- Response Assertions -->
-        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code Assertion" enabled="true">
-          <collectionProp name="Asserion.test_strings">
-            <stringProp name="49586">200</stringProp>
-          </collectionProp>
-          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
-          <intProp name="Assertion.test_type">8</intProp>
-        </ResponseAssertion>
-        <hashTree/>
-        
-        <!-- JSON Path Assertions -->
-        <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Validate Response Structure" enabled="true">
-          <stringProp name="JSON_PATH">$.data</stringProp>
-          <stringProp name="EXPECTED_VALUE"></stringProp>
-          <boolProp name="JSONVALIDATION">false</boolProp>
-          <boolProp name="EXPECT_NULL">false</boolProp>
-          <boolProp name="INVERT">false</boolProp>
-        </JSONPathAssertion>
-        <hashTree/>
-      </hashTree>
-    </hashTree>
-  </hashTree>
-</jmeterTestPlan>
-```
-
-## 7. Configuration Files
-
-### config/test-profiles/smoke-test.properties
-
-```properties
-# Smoke Test Profile Configuration
-# Quick validation test with minimal load
-
-# Test duration (5 minutes)
-test.duration=300
-
-# Reduced RPM multiplier (10% of normal load)
-rpm.multiplier=0.1
-
-# Thread configuration
-thread.count.max=10
-thread.rampup.time=30
-
-# Reduced timeouts for faster feedback
-http.connection.timeout=3000
-http.response.timeout=15000
-
-# Disable some heavy validations
-validate.response.schema=false
-generate.html.report=false
-```
-
-### config/test-profiles/load-test.properties
-
-```properties
-# Load Test Profile Configuration
-# Standard load test with expected production load
-
-# Test duration (1 hour)
-test.duration=3600
-
-# Normal RPM multiplier
-rpm.multiplier=1.0
-
-# Thread configuration
-thread.count.max=100
-thread.rampup.time=300
-
-# Standard timeouts
-http.connection.timeout=5000
-http.response.timeout=30000
-
-# Enable all validations
-validate.response.schema=true
-generate.html.report=true
-
-# Monitoring settings
-backend.influxdb.enabled=true
-backend.graphite.enabled=false
-```
-
-### config/test-profiles/stress-test.properties
-
-```properties
-# Stress Test Profile Configuration
-# High load test to find system limits
-
-# Test duration (2 hours)
-test.duration=7200
-
-# Increased RPM multiplier (150% of normal)
-rpm.multiplier=1.5
-
-# Thread configuration
-thread.count.max=200
-thread.rampup.time=600
-
-# Extended timeouts for stress conditions
-http.connection.timeout=10000
-http.response.timeout=60000
-
-# Enable detailed monitoring
-validate.response.schema=true
-generate.html.report=true
-save.response.data=true
-
-# Advanced monitoring
-backend.influxdb.enabled=true
-backend.graphite.enabled=true
-monitor.jvm.metrics=true
-```
-
-## 8. README.md
-
-```markdown
-# YMS Dashboard JMeter Testing Framework
-
-A comprehensive JMeter-based performance testing framework for the YMS Dashboard Service APIs with multi-tenant support.
-
-## Features
-
-- **Multi-tenant Support**: Test multiple tenants simultaneously with different RPM configurations
-- **10 API Endpoints**: Complete coverage of all YMS Dashboard Service APIs
-- **Dynamic Payload Generation**: Groovy scripts generate realistic test data
-- **Flexible Load Distribution**: Configure load distribution across facilities and APIs
-- **Multiple Test Profiles**: Smoke, load, and stress test configurations
-- **Distributed Testing**: Support for distributed load generation
-- **Real-time Monitoring**: Integration with InfluxDB/Grafana for live metrics
-- **Comprehensive Reporting**: HTML reports with detailed performance metrics
-
-## Prerequisites
-
-- Java 8 or higher
-- Apache JMeter 5.0 or higher
-- Bash shell (for Linux/Mac) or Git Bash (for Windows)
-- Optional: InfluxDB and Grafana for real-time monitoring
-
-## Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd jmeter-yms-dashboard-test
-   ```
-
-2. **Run setup script**
-   ```bash
-   chmod +x scripts/*.sh
-   ./scripts/setup.sh
-   ```
-
-3. **Configure test data**
-   - Edit `data/tenants.csv` with your tenant information
-   - Update `data/facilities.csv` with facility mappings
-   - Add authentication tokens to `data/tenants.csv`
-
-4. **Run a smoke test**
-   ```bash
-   ./scripts/run-test.sh --profile smoke-test --base-url http://your-api-url
-   ```
-
-## Project Structure
-
-```
-jmeter-yms-dashboard-test/
-├── test-plans/           # JMeter test plans
-├── data/                 # Test data files
-├── scripts/              # Execution and utility scripts
-├── config/               # Configuration files
-├── results/              # Test results (created at runtime)
-└── reports/              # HTML reports (created at runtime)
-```
-
-## Configuration
-
-### Tenant Configuration (data/tenants.csv)
-
-```csv
-tenant_id,tenant_name,target_rpm,auth_token,ramp_up_seconds
-TENANT_A,Customer Alpha,1200,Bearer <token>,300
-TENANT_B,Customer Beta,800,Bearer <token>,180
-```
-
-- `tenant_id`: Unique identifier for the tenant
-- `tenant_name`: Human-readable tenant name
-- `target_rpm`: Target requests per minute for this tenant
-- `auth_token`: Bearer token for authentication
-- `ramp_up_seconds`: Time to reach target load
-
-### Facility Distribution (data/facilities.csv)
-
-```csv
-tenant_id,facility_id,facility_name,load_weight,carrier_ids
-TENANT_A,101,DC West,0.6,"201,202,203"
-TENANT_A,102,DC East,0.4,"204,205"
-```
-
-- `load_weight`: Percentage of tenant load for this facility (0.0-1.0)
-- `carrier_ids`: Comma-separated list of carrier IDs
-
-### API Mix Configuration
-
-The default API distribution is:
-- yard-availability: 15%
-- trailer-overview: 20%
-- trailer-exception-summary: 10%
-- task-workload-summary: 10%
-- task-attention-summary: 5%
-- site-occupancy: 15%
-- shipment-volume-forecast: 10%
-- dwell-time-summary: 5%
-- door-breakdown-summary: 5%
-- detention-summary: 5%
-
-## Running Tests
-
-### Basic Test Execution
-
-```bash
-# Run with default settings
-./scripts/run-test.sh
-
-# Specify base URL and duration
-./scripts/run-test.sh --base-url https://api.example.com --duration 3600
-
-# Test specific tenants
-./scripts/run-test.sh --tenants TENANT_A,TENANT_B
-
-# Use a test profile
-./scripts/run-test.sh --profile load-test
-
-# Increase load by 50%
-./scripts/run-test.sh --rpm-multiplier 1.5
-```
-
-### Test Profiles
-
-1. **Smoke Test** (`--profile smoke-test`)
-   - Duration: 5 minutes
-   - Load: 10% of configured RPM
-   - Purpose: Quick validation
-
-2. **Load Test** (`--profile load-test`)
-   - Duration: 1 hour
-   - Load: 100% of configured RPM
-   - Purpose: Standard performance testing
-
-3. **Stress Test** (`--profile stress-test`)
-   - Duration: 2 hours
-   - Load: 150% of configured RPM
-   - Purpose: Find system limits
-
-### Excluding APIs
-
-To exclude specific APIs from a test run:
-
-```bash
-./scripts/run-test.sh --exclude-apis "yard-availability,trailer-overview"
-```
-
-### Dry Run
-
-Validate configuration without running tests:
-
-```bash
-./scripts/run-test.sh --dry-run --tenants TENANT_A
-```
-
-## Distributed Testing
-
-### Setup Slave Machines
-
-1. Install JMeter on all slave machines
-2. Ensure network connectivity between master and slaves
-3. Configure firewall rules for RMI communication
-
-### Start Slave Servers
-
-```bash
-./scripts/run-distributed.sh --slaves slave1,slave2,slave3 --start-slaves
-```
-
-### Run Distributed Test
-
-```bash
-./scripts/run-distributed.sh \
-  --slaves slave1,slave2,slave3 \
-  --base-url https://api.example.com \
-  --duration 3600 \
-  --profile load-test
-```
-
-### Check Slave Status
-
-```bash
-./scripts/run-distributed.sh --slaves slave1,slave2,slave3 --check-slaves
-```
-
-## Adding New Tenants
-
-1. Add tenant to `data/tenants.csv`:
-   ```csv
-   TENANT_D,Customer Delta,1000,Bearer <token>,240
-   ```
-
-2. Add facilities for the tenant in `data/facilities.csv`:
-   ```csv
-   TENANT_D,401,Warehouse A,0.7,"501,502,503"
-   TENANT_D,402,Warehouse B,0.3,"504,505"
-   ```
-
-3. Ensure total `load_weight` for each tenant equals 1.0
-
-## Modifying RPM Settings
-
-### Global RPM Adjustment
-
-Use the `--rpm-multiplier` flag:
-```bash
-# 50% of configured load
-./scripts/run-test.sh --rpm-multiplier 0.5
-
-# 200% of configured load
-./scripts/run-test.sh --rpm-multiplier 2.0
-```
-
-### Per-Tenant RPM
-
-Edit `data/tenants.csv` and modify the `target_rpm` column.
-
-### API Mix Adjustment
-
-Modify the throughput percentages in `test-plans/yms-dashboard-main.jmx`:
-```xml
-<FloatProperty>
-  <n>ThroughputController.percentThroughput</n>
-  <value>15.0</value>  <!-- Change this value -->
-</FloatProperty>
-```
-
-## Monitoring and Reporting
-
-### Real-time Monitoring with InfluxDB
-
-1. Install and start InfluxDB:
-   ```bash
-   docker run -p 8086:8086 influxdb:1.8
-   ```
-
-2. Create database:
-   ```bash
-   curl -XPOST 'http://localhost:8086/query' --data-urlencode "q=CREATE DATABASE jmeter"
-   ```
-
-3. Configure JMeter backend listener (already configured in test plan)
-
-4. View metrics in InfluxDB or connect Grafana
-
-### HTML Reports
-
-Reports are automatically generated after each test run:
-```
-reports/<report-name>/index.html
-```
-
-### Custom Reporting
-
-Access raw results for custom analysis:
-```
-results/<report-name>/results.jtl
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"JMeter not found"**
-   - Ensure JMeter is installed and in PATH
-   - Set JMETER_HOME environment variable
-
-2. **"Test plan not found"**
-   - Run setup.sh to create directory structure
-   - Check file paths in error message
-
-3. **Authentication failures**
-   - Verify bearer tokens in tenants.csv
-   - Check token expiration
-   - Ensure tenant header is correct
-
-4. **High error rate**
-   - Check server logs
-   - Reduce load with --rpm-multiplier
-   - Verify API endpoints are correct
-
-5. **Out of memory errors**
-   - Increase JMeter heap size in jmeter.properties
-   - Reduce thread count
-   - Disable response data saving
-
-### Debug Mode
-
-Enable JMeter debug logging:
-```bash
-./scripts/run-test.sh --base-url http://localhost:5003 2>&1 | tee debug.log
-```
-
-View JMeter logs:
-```bash
-tail -f logs/jmeter_*.log
-```
-
-## Best Practices
-
-1. **Start Small**: Always run smoke tests before full load tests
-2. **Monitor Resources**: Watch server CPU, memory, and network
-3. **Gradual Ramp-up**: Use appropriate ramp-up times
-4. **Data Variety**: Ensure test data has sufficient variety
-5. **Regular Baselines**: Establish performance baselines
-6. **Clean Test Data**: Reset test data between runs if needed
-
-## Performance Tuning
-
-### JMeter Configuration
-
-Edit `config/jmeter.properties`:
-```properties
-# Increase heap size
-HEAP=-Xms4g -Xmx8g
-
-# Reduce memory usage
-jmeter.save.saveservice.output_format=csv
-jmeter.save.saveservice.response_data=false
-jmeter.save.saveservice.samplerData=false
-```
-
-### OS Tuning (Linux)
-
-```bash
-# Increase file descriptors
-ulimit -n 65535
-
-# Tune network parameters
-sudo sysctl -w net.ipv4.tcp_tw_reuse=1
-sudo sysctl -w net.ipv4.ip_local_port_range="1024 65535"
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-[Your License Here]
-
-## Support
-
-For issues and questions:
-- Create an issue in the repository
-- Contact the team at: [support email]
-```
-
-## 9. Additional Payload Generators
-
-### scripts/payload-generators/task-workload-generator.groovy
-
-```groovy
-import groovy.json.JsonBuilder
-load("scripts/payload-generators/base-payload-generator.groovy")
-
-/**
- * Generate payload for task-workload-summary API
- */
-
-def facilityId = vars.get("facility_id") as Integer
-
-// Task types that might be used
-def taskTypes = ["LOADING", "UNLOADING", "INSPECTION", "MAINTENANCE", "MOVEMENT"]
-def selectedTaskType = BasePayloadGenerator.getRandomElement(taskTypes)
-
-// Time ranges
-def timeRanges = ["LAST_HOUR", "LAST_24_HOURS", "LAST_7_DAYS", "LAST_30_DAYS"]
-def selectedTimeRange = BasePayloadGenerator.getRandomElement(timeRanges)
-
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
-    taskType selectedTaskType
-    timeRange selectedTimeRange
-}
-
-vars.put("request_payload", payload.toString())
-log.info("Generated task workload payload: " + payload.toString())
-```
-
-### scripts/payload-generators/dwell-time-generator.groovy
-
-```groovy
-import groovy.json.JsonBuilder
-load("scripts/payload-generators/base-payload-generator.groovy")
-
-/**
- * Generate payload for dwell-time-summary API
- */
-
-def facilityId = vars.get("facility_id") as Integer
-def carrierIdsString = vars.get("carrier_ids")
-def carrierIds = BasePayloadGenerator.parseCarrierIds(carrierIdsString)
-
-// Dwell time thresholds in hours
-def thresholds = [24, 48, 72, 96, 120, 168]
-def selectedThreshold = BasePayloadGenerator.getRandomElement(thresholds)
-
-// Group by options
-def groupByOptions = ["CARRIER", "TRAILER_TYPE", "LOCATION", "DAY_OF_WEEK"]
-def selectedGroupBy = BasePayloadGenerator.getRandomElement(groupByOptions)
-
-def payload = new JsonBuilder()
-payload {
-    facilityId facilityId
-    if (carrierIds.size() > 0) {
-        carrierIds BasePayloadGenerator.getRandomSubset(carrierIds, 5)
-    }
-    thresholdHours selectedThreshold
-    groupBy selectedGroupBy
-}
-
-vars.put("request_payload", payload.toString())
-log.info("Generated dwell time payload: " + payload.toString())
-```
-
-This comprehensive JMeter testing framework provides everything needed to perform multi-tenant stress testing of the YMS Dashboard Service APIs. The framework is modular, scalable, and includes all the requested features including dynamic payload generation, flexible load distribution, and comprehensive monitoring capabilities.
