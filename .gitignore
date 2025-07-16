@@ -1,0 +1,46 @@
+# OS/Editor/IDE files
+.DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+.idea/
+.vscode/
+*.iml
+
+# JMeter runtime output
+logs/
+results/
+reports/
+temp/
+*.jtl
+*.log
+
+# JMeter generated HTML reports (if not versioned)
+reports/*
+
+# Data files that may contain secrets or are generated
+data/auth-tokens.csv
+data/*.bak
+data/test-data/*.bak
+
+# Shell script artifacts
+*.pid
+
+# Misc
+*.class
+*.jar
+*.pyc
+__pycache__/
+node_modules/
+.env
+.env.*
+
+# Keep sample data and configs
+!data/tenants.csv
+!data/facilities.csv
+!data/carriers.csv
+!config/
+!scripts/
+!test-plans/ 
