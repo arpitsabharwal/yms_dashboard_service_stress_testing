@@ -9,7 +9,7 @@ set -e
 BASE_URL="http://localhost:5003"
 TEST_DURATION=3600
 RPM_MULTIPLIER=1.0
-TEST_PLAN="test-plans/yms-dashboard-main.jmx"
+TEST_PLAN="test-plans/yms-dashboard-main-simple.jmx"
 REPORT_NAME="yms-test-$(date +%Y%m%d_%H%M%S)"
 TENANTS=""
 TEST_PROFILE=""
@@ -396,11 +396,15 @@ generate_summary() {
                         if ($2<min || NR==2) min=$2
                     }
                     END {
-                        print "Total Samples: " total
-                        print "Success Rate: " (success/total*100) "%"
-                        print "Average Response Time: " (sum/total) " ms"
-                        print "Min Response Time: " min " ms"
-                        print "Max Response Time: " max " ms"
+                        if (total > 0) {
+                            print "Total Samples: " total
+                            print "Success Rate: " (success/total*100) "%"
+                            print "Average Response Time: " (sum/total) " ms"
+                            print "Min Response Time: " min " ms"
+                            print "Max Response Time: " max " ms"
+                        } else {
+                            print "No samples recorded"
+                        }
                     }
                 ' "$results_file"
                 
@@ -460,4 +464,4 @@ main() {
 }
 
 # Execute main function
-main "$@" 
+main "$@"

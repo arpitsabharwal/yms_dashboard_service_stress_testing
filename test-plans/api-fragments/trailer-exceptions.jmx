@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
   <hashTree>
-    <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Yard Availability API" enabled="true"/>
+    <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Trailer Exception Summary API" enabled="true"/>
     <hashTree>
       
       <!-- OS Process Sampler for Payload Generation -->
-      <SystemSampler guiclass="SystemSamplerGui" testclass="SystemSampler" testname="Generate Yard Availability Payload" enabled="true">
+      <SystemSampler guiclass="SystemSamplerGui" testclass="SystemSampler" testname="Generate Trailer Exceptions Payload" enabled="true">
         <boolProp name="SystemSampler.checkReturnCode">true</boolProp>
         <stringProp name="SystemSampler.expectedReturnCode">0</stringProp>
         <stringProp name="SystemSampler.command">python3</stringProp>
@@ -13,12 +13,17 @@
           <collectionProp name="Arguments.arguments">
             <elementProp name="" elementType="Argument">
               <stringProp name="Argument.name"></stringProp>
-              <stringProp name="Argument.value">${__BeanShell(props.get("user.dir"))}/scripts/payload-generators/facility_request_generator.py</stringProp>
+              <stringProp name="Argument.value">${__BeanShell(props.get("user.dir"))}/scripts/payload-generators/trailer_exceptions_generator.py</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="" elementType="Argument">
               <stringProp name="Argument.name"></stringProp>
               <stringProp name="Argument.value">${facility_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="" elementType="Argument">
+              <stringProp name="Argument.name"></stringProp>
+              <stringProp name="Argument.value">${carrier_ids}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
           </collectionProp>
@@ -34,14 +39,14 @@
           <stringProp name="RegexExtractor.refname">request_payload</stringProp>
           <stringProp name="RegexExtractor.regex">(.+)</stringProp>
           <stringProp name="RegexExtractor.template">$1$</stringProp>
-          <stringProp name="RegexExtractor.default">{"facilityId": 101}</stringProp>
+          <stringProp name="RegexExtractor.default">{"facilityId": 101, "thresholdHours": 48, "bypassFlagged": false}</stringProp>
           <stringProp name="RegexExtractor.match_number">1</stringProp>
         </RegexExtractor>
         <hashTree/>
       </hashTree>
       
       <!-- HTTP Request -->
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Yard Availability" enabled="true">
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Trailer Exception Summary" enabled="true">
         <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
         <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
           <collectionProp name="Arguments.arguments">
@@ -52,24 +57,13 @@
             </elementProp>
           </collectionProp>
         </elementProp>
-        <stringProp name="HTTPSampler.domain"></stringProp>
-        <stringProp name="HTTPSampler.port"></stringProp>
-        <stringProp name="HTTPSampler.protocol"></stringProp>
-        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-        <stringProp name="HTTPSampler.path">/yms-dashboard-service/api/v1/yard-availability</stringProp>
+        <stringProp name="HTTPSampler.path">/yms-dashboard-service/api/v1/trailer-exception-summary</stringProp>
         <stringProp name="HTTPSampler.method">POST</stringProp>
-        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-        <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-        <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
         <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
         <stringProp name="HTTPSampler.response_timeout">30000</stringProp>
       </HTTPSamplerProxy>
       <hashTree>
-        
-        <!-- HTTP Header Manager for Auth -->
+        <!-- Headers -->
         <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="API Headers" enabled="true">
           <collectionProp name="HeaderManager.headers">
             <elementProp name="Authorization" elementType="Header">
@@ -84,35 +78,20 @@
         </HeaderManager>
         <hashTree/>
         
-        <!-- Response Assertion -->
-        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+        <!-- Response Assertions -->
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code Assertion" enabled="true">
           <collectionProp name="Asserion.test_strings">
             <stringProp name="49586">200</stringProp>
           </collectionProp>
-          <stringProp name="Assertion.custom_message">Expected HTTP 200 response</stringProp>
           <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
-          <boolProp name="Assertion.assume_success">false</boolProp>
           <intProp name="Assertion.test_type">8</intProp>
         </ResponseAssertion>
         <hashTree/>
         
-        <!-- JSON Assertion -->
-        <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="JSON Path Assertion" enabled="true">
-          <stringProp name="JSON_PATH">$.facilityId</stringProp>
-          <stringProp name="EXPECTED_VALUE">${facility_id}</stringProp>
-          <boolProp name="JSONVALIDATION">true</boolProp>
-          <boolProp name="EXPECT_NULL">false</boolProp>
-          <boolProp name="INVERT">false</boolProp>
-          <boolProp name="ISREGEX">false</boolProp>
-        </JSONPathAssertion>
-        <hashTree/>
-        
-        <!-- Duration Assertion -->
         <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
           <stringProp name="DurationAssertion.duration">2000</stringProp>
         </DurationAssertion>
         <hashTree/>
-        
       </hashTree>
     </hashTree>
   </hashTree>

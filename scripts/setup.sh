@@ -31,12 +31,26 @@ print_status() {
 # Check if JMeter is installed
 check_jmeter() {
     if command -v jmeter &> /dev/null; then
-        JMETER_VERSION=$(jmeter --version 2>&1 | grep -oP 'Version \K[0-9.]+' | head -1)
+        # Get JMeter version - compatible with macOS
+        JMETER_VERSION=$(jmeter --version 2>&1 | grep -E "^(\s+)?[0-9]+\.[0-9]+\.[0-9]+" | head -1 | sed 's/^[[:space:]]*//' | cut -d' ' -f1)
+        
+        if [ -z "$JMETER_VERSION" ]; then
+            # Alternative method to get version
+            JMETER_VERSION=$(jmeter --version 2>&1 | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" | head -1)
+        fi
+        
         print_status "OK" "JMeter installed (version: $JMETER_VERSION)"
         
         # Check minimum version (5.0)
         MIN_VERSION="5.0"
-        if [ "$(printf '%s\n' "$MIN_VERSION" "$JMETER_VERSION" | sort -V | head -n1)" = "$MIN_VERSION" ]; then
+        
+        # Extract major and minor version numbers
+        JMETER_MAJOR=$(echo $JMETER_VERSION | cut -d. -f1)
+        JMETER_MINOR=$(echo $JMETER_VERSION | cut -d. -f2)
+        MIN_MAJOR=$(echo $MIN_VERSION | cut -d. -f1)
+        MIN_MINOR=$(echo $MIN_VERSION | cut -d. -f2)
+        
+        if [ "$JMETER_MAJOR" -gt "$MIN_MAJOR" ] || ([ "$JMETER_MAJOR" -eq "$MIN_MAJOR" ] && [ "$JMETER_MINOR" -ge "$MIN_MINOR" ]); then
             print_status "OK" "JMeter version meets minimum requirement (>= $MIN_VERSION)"
         else
             print_status "ERROR" "JMeter version $JMETER_VERSION is below minimum requirement ($MIN_VERSION)"
@@ -52,7 +66,8 @@ check_jmeter() {
 # Check Java installation
 check_java() {
     if command -v java &> /dev/null; then
-        JAVA_VERSION=$(java -version 2>&1 | grep -oP 'version "\K[^"]+' | head -1)
+        # Get Java version - compatible with macOS
+        JAVA_VERSION=$(java -version 2>&1 | grep -E "version" | head -1 | cut -d'"' -f2)
         print_status "OK" "Java installed (version: $JAVA_VERSION)"
     else
         print_status "ERROR" "Java not found. JMeter requires Java 8 or higher"
@@ -99,7 +114,7 @@ check_data_files() {
     
     for file in "${required_files[@]}"; do
         if [ -f "$file" ]; then
-            line_count=$(wc -l < "$file")
+            line_count=$(wc -l < "$file" | tr -d ' ')
             print_status "OK" "Found $file ($line_count lines)"
         else
             print_status "WARNING" "Missing $file - creating template"
@@ -127,8 +142,22 @@ install_plugins() {
     echo ""
     echo "Checking JMeter plugins..."
     
-    JMETER_HOME=$(dirname $(dirname $(which jmeter)))
+    # Find JMeter home - works on macOS with Homebrew
+    if command -v jmeter &> /dev/null; then
+        JMETER_BIN=$(which jmeter)
+        if [ -L "$JMETER_BIN" ]; then
+            # Follow symlink (for Homebrew installations)
+            JMETER_BIN=$(readlink "$JMETER_BIN")
+        fi
+        JMETER_HOME=$(dirname $(dirname "$JMETER_BIN"))
+    else
+        print_status "ERROR" "Cannot find JMeter installation"
+        return
+    fi
+    
     PLUGINS_DIR="$JMETER_HOME/lib/ext"
+    
+    print_status "INFO" "JMeter home: $JMETER_HOME"
     
     # Check for Plugins Manager
     if [ -f "$PLUGINS_DIR/jmeter-plugins-manager.jar" ]; then
@@ -283,6 +312,27 @@ validate_tenant_config() {
     fi
 }
 
+# Check Python installation
+check_python() {
+    echo ""
+    echo "Checking Python installation..."
+    
+    if command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
+        print_status "OK" "Python3 installed (version: $PYTHON_VERSION)"
+        
+        # Test Python modules
+        if python3 -c "import json, random, datetime, sys, os" 2>/dev/null; then
+            print_status "OK" "Required Python modules available"
+        else
+            print_status "WARNING" "Some Python modules may be missing"
+        fi
+    else
+        print_status "ERROR" "Python3 not found. Payload generators require Python 3"
+        echo "Install Python 3 from: https://www.python.org/downloads/"
+    fi
+}
+
 # Main setup flow
 main() {
     echo "Starting setup process..."
@@ -291,6 +341,7 @@ main() {
     # System checks
     check_java
     check_jmeter
+    check_python
     
     # Create structure
     create_directories
@@ -318,9 +369,10 @@ main() {
     echo "2. Update data/facilities.csv with facility mappings"
     echo "3. Update data/carriers.csv with carrier information"
     echo "4. Add authentication tokens to data/tenants.csv"
-    echo "5. Run: ./scripts/run-test.sh --help"
+    echo "5. Make scripts executable: chmod +x scripts/*.sh"
+    echo "6. Run: ./scripts/run-test.sh --help"
     echo ""
 }
 
 # Run main function
-main 
+main
