@@ -1,0 +1,5 @@
+*.log
+/report*
+*.csv
+*.jtl
+CLAUDE.md

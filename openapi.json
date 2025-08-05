@@ -1,0 +1,904 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+      "title": "Dashboard API",
+      "description": "API Documentation for Dashboard API",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "https://dy-stress.fourkites.com",
+        "description": "Generated server url"
+      }
+    ],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/yms-dashboard-service/api/v1/yard-availability": {
+        "post": {
+          "tags": [
+            "yard-availability-controller"
+          ],
+          "summary": "Gets yard availability summary",
+          "operationId": "getYardAvailability",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/YardAvailabilitySummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/trailer-overview": {
+        "post": {
+          "tags": [
+            "trailer-overview-controller"
+          ],
+          "summary": "Get trailer overview summary",
+          "operationId": "getTrailerOverview",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailerOverviewRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrailerOverviewSummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/trailer-exception-summary": {
+        "post": {
+          "tags": [
+            "trailer-exceptions-controller"
+          ],
+          "summary": "Get trailer exceptions summary",
+          "operationId": "getTrailerExceptions",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailerExceptionsRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrailerExceptionResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/task-workload-summary": {
+        "post": {
+          "tags": [
+            "task-work-load-controller"
+          ],
+          "summary": "Get task workload summary",
+          "operationId": "getTaskWorkLoad",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TaskWorkloadResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/task-attention-summary": {
+        "post": {
+          "tags": [
+            "task-attentions-controller"
+          ],
+          "summary": "Get critical tasks summary",
+          "operationId": "getTaskAttentions",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CriticalTasksSummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/site-occupancy": {
+        "post": {
+          "tags": [
+            "site-occupancy-controller"
+          ],
+          "summary": "Get site occupancy summary",
+          "operationId": "getSiteOccupancy",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityCarrierRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SiteOccupancySummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/shipment-volume-forecast": {
+        "post": {
+          "tags": [
+            "shipment-volume-forecast-controller"
+          ],
+          "summary": "Get shipment volume forecast summary",
+          "operationId": "getShipmentVolumeForecast",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentVolumeForecastRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ShipmentVolumeForecastResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/dwell-time-summary": {
+        "post": {
+          "tags": [
+            "equipments-dwell-time-controller"
+          ],
+          "summary": "Get dwell time summary",
+          "operationId": "getEquipmentsDwellTime",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityCarrierRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DwellTimeSummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/door-breakdown-summary": {
+        "post": {
+          "tags": [
+            "door-break-down-summary-controller"
+          ],
+          "summary": "Get door breakdown metrics",
+          "operationId": "getDoorBreakDownMetrics",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DoorBreakdownResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/yms-dashboard-service/api/v1/detention-summary": {
+        "post": {
+          "tags": [
+            "detention-summary-controller"
+          ],
+          "summary": "Get detention summary",
+          "operationId": "getDetentionStatus",
+          "parameters": [
+            {
+              "name": "tenant",
+              "in": "header",
+              "description": "Tenant name",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityCarrierRequestPayloadDTO"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DetentionSummaryResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "FacilityRequestPayloadDTO": {
+          "required": [
+            "facilityId"
+          ],
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "PercentageBreakdownResponseDTO": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "percentage": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "YardAvailabilityResponseDTO": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "active": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "inactive": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "YardAvailabilitySummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "docks": {
+              "$ref": "#/components/schemas/YardAvailabilityResponseDTO"
+            },
+            "parkingSpots": {
+              "$ref": "#/components/schemas/YardAvailabilityResponseDTO"
+            }
+          }
+        },
+        "TrailerOverviewRequestPayloadDTO": {
+          "required": [
+            "carrierIds",
+            "facilityId",
+            "trailerState"
+          ],
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "carrierIds": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "trailerState": {
+              "type": "string",
+              "enum": [
+                "all",
+                "noFlags",
+                "audit",
+                "damaged",
+                "outOfService"
+              ]
+            }
+          }
+        },
+        "TrailerOverviewResponseDTO": {
+          "type": "object",
+          "properties": {
+            "loadedInbound": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "loadedOutbound": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "empty": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "partial": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "TrailerOverviewSummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "totalTrailersCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "trailerOverviewMetrics": {
+              "$ref": "#/components/schemas/TrailerOverviewResponseDTO"
+            }
+          }
+        },
+        "TrailerExceptionsRequestPayloadDTO": {
+          "required": [
+            "carrierIds",
+            "facilityId",
+            "inboundLoadedThresholdHours",
+            "lastDetectionTimeThresholdHours"
+          ],
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "carrierIds": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "lastDetectionTimeThresholdHours": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "inboundLoadedThresholdHours": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "TrailerExceptionResponseDTO": {
+          "type": "object",
+          "properties": {
+            "lastDetectedOnSiteExceptionMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "locationUnassignedExceptionMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "loadedWithoutShipmentDataExceptionMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "inboundLoadedExceptionMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "TaskStatusResponseDTO": {
+          "type": "object",
+          "properties": {
+            "loggedTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "nextInQueueTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "assignedDispatchedTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "acceptedTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "hookedTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "rejectedTaskMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "TaskWorkloadResponseDTO": {
+          "type": "object",
+          "properties": {
+            "totalTasksCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "activeSwitchersCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "taskStatusMetrics": {
+              "$ref": "#/components/schemas/TaskStatusResponseDTO"
+            }
+          }
+        },
+        "CriticalTaskResponseDTO": {
+          "type": "object",
+          "properties": {
+            "priorityTasks": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "openTasks30To60Minutes": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "openTasksOver60Minutes": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "rejectedTasks": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "CriticalTasksSummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "totalCriticalTasksCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "criticalTaskMetrics": {
+              "$ref": "#/components/schemas/CriticalTaskResponseDTO"
+            }
+          }
+        },
+        "FacilityCarrierRequestPayloadDTO": {
+          "required": [
+            "carrierIds",
+            "facilityId"
+          ],
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "carrierIds": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        },
+        "SiteOccupancyResponseDTO": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "occupied": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "SiteOccupancySummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "overallYardOccupancyMetrics": {
+              "$ref": "#/components/schemas/SiteOccupancyResponseDTO"
+            },
+            "parkingSpotsOccupancyMetrics": {
+              "$ref": "#/components/schemas/SiteOccupancyResponseDTO"
+            },
+            "docksOccupancyMetrics": {
+              "$ref": "#/components/schemas/SiteOccupancyResponseDTO"
+            }
+          }
+        },
+        "ShipmentVolumeForecastRequestPayloadDTO": {
+          "required": [
+            "carrierIds",
+            "facilityId",
+            "includeShipmentsWithoutCarrier",
+            "shipmentDirection",
+            "startDate",
+            "timeZone"
+          ],
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "carrierIds": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "timeZone": {
+              "type": "string"
+            },
+            "numDays": {
+              "maximum": 7,
+              "type": "integer",
+              "format": "int32"
+            },
+            "shipmentDirection": {
+              "type": "string",
+              "enum": [
+                "Inbound",
+                "Outbound"
+              ]
+            },
+            "startDate": {
+              "type": "string"
+            },
+            "includeShipmentsWithoutCarrier": {
+              "type": "boolean"
+            }
+          }
+        },
+        "ShipmentVolumeForecastMetricsResponseDTO": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "shipmentMetrics": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "ShipmentVolumeForecastResponseDTO": {
+          "type": "object",
+          "properties": {
+            "totalShipmentsCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "shipmentVolumeForecastMetrics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ShipmentVolumeForecastMetricsResponseDTO"
+              }
+            }
+          }
+        },
+        "DwellTimeDayWiseDistributionResponseDTO": {
+          "type": "object",
+          "properties": {
+            "range0To2Days": {
+              "$ref": "#/components/schemas/DwellTimeDistributionResponseDTO"
+            },
+            "range2To5Days": {
+              "$ref": "#/components/schemas/DwellTimeDistributionResponseDTO"
+            },
+            "range5To8Days": {
+              "$ref": "#/components/schemas/DwellTimeDistributionResponseDTO"
+            },
+            "rangeMoreThan8Days": {
+              "$ref": "#/components/schemas/DwellTimeDistributionResponseDTO"
+            }
+          }
+        },
+        "DwellTimeDistributionResponseDTO": {
+          "type": "object",
+          "properties": {
+            "loadedInbound": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "loadedOutbound": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "empty": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "partiallyLoaded": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "total": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "DwellTimeSummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "avgDwellTimeInSeconds": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "dwellTimeMetrics": {
+              "$ref": "#/components/schemas/DwellTimeDayWiseDistributionResponseDTO"
+            }
+          }
+        },
+        "DoorBreakDownHourDistributionResponseDTO": {
+          "type": "object",
+          "properties": {
+            "rangeLessThan2Hours": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "range2To5Hours": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "range5To8Hours": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "rangeMoreThan8Hours": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "DoorBreakdownResponseDTO": {
+          "type": "object",
+          "properties": {
+            "averageDoorOccupiedTimeInSeconds": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "doorBreakdownMetrics": {
+              "$ref": "#/components/schemas/DoorBreakDownHourDistributionResponseDTO"
+            }
+          }
+        },
+        "DetentionStatusResponseDTO": {
+          "type": "object",
+          "properties": {
+            "inDetention": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "atRiskForDetention": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            },
+            "inFreeTime": {
+              "$ref": "#/components/schemas/PercentageBreakdownResponseDTO"
+            }
+          }
+        },
+        "DetentionSummaryResponseDTO": {
+          "type": "object",
+          "properties": {
+            "detentionFees": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "equipmentsEligibleForDetention": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "detentionStatusMetrics": {
+              "$ref": "#/components/schemas/DetentionStatusResponseDTO"
+            }
+          }
+        }
+      },
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }

@@ -1,11 +1,15 @@
 #!/bin/bash
 
+# Add JMeter to PATH
+export PATH="/opt/homebrew/Cellar/jmeter/5.6.3/bin:$PATH"
+
 # Script to run JMeter test with different configurations
 
 # Default values
 THREADS=10
 RAMPUP=1
 DURATION=10
+RPM=3
 TEST_FILE="test_plan.jmx"
 RESULTS_FILE="results_$(date +%Y%m%d_%H%M%S).jtl"
 
@@ -24,6 +28,10 @@ while [[ $# -gt 0 ]]; do
       DURATION="$2"
       shift 2
       ;;
+    --rpm)
+      RPM="$2"
+      shift 2
+      ;;
     -f|--file)
       TEST_FILE="$2"
       shift 2
@@ -35,9 +43,10 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       echo "Usage: $0 [OPTIONS]"
       echo "Options:"
-      echo "  -t, --threads    Number of threads (default: 30)"
-      echo "  -r, --rampup     Ramp-up time in seconds (default: 60)"
-      echo "  -d, --duration   Test duration in seconds (default: 300)"
+      echo "  -t, --threads    Number of threads (default: 10)"
+      echo "  -r, --rampup     Ramp-up time in seconds (default: 1)"
+      echo "  -d, --duration   Test duration in seconds (default: 10)"
+      echo "  --rpm            Requests per minute per user (default: 3)"
       echo "  -f, --file       JMeter test file (default: test_plan.jmx)"
       echo "  -o, --output     Results file name (default: results_timestamp.jtl)"
       echo "  -h, --help       Show this help message"
@@ -59,6 +68,7 @@ echo "Running JMeter test with:"
 echo "  Threads: $THREADS"
 echo "  Ramp-up: $RAMPUP seconds"
 echo "  Duration: $DURATION seconds"
+echo "  Requests per minute per user: $RPM"
 echo "  Test file: $TEST_FILE"
 echo "  Results file: $RESULTS_FILE"
 echo ""
@@ -67,7 +77,8 @@ echo ""
 jmeter -n -t "$TEST_FILE" -l "$RESULTS_FILE" \
   -Jthreads=$THREADS \
   -Jrampup=$RAMPUP \
-  -Jduration=$DURATION
+  -Jduration=$DURATION \
+  -Jrpm=$RPM
 
 # Check if test completed successfully
 if [ $? -eq 0 ]; then
