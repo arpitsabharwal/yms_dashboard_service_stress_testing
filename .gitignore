@@ -3,3 +3,10 @@
 *.csv
 *.jtl
 CLAUDE.md
+
+# Environment configuration files (contain credentials)
+config/*.env
+!config/*.env.example
+
+# Token files
+tokens/*.json
