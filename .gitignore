@@ -2,11 +2,19 @@
 /report*
 *.csv
 *.jtl
+*.pyc
+.DS_Store
 CLAUDE.md
 
 # Environment configuration files (contain credentials)
 config/*.env
 !config/*.env.example
+config/multi_user*.json
+!config/multi_user_example.json
 
 # Token files
 tokens/*.json
+
+# Multi-user test data
+multi_user_test_data.csv
+test_prod_tokens.json

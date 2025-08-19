@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "email": "user1@fourkites.com",
+      "password": "Password1!",
+      "tenants": ["ge-appliances", "fritolay"],
+      "description": "User 1 - GE and Frito Lay access"
+    },
+    {
+      "email": "user2@fourkites.com",
+      "password": "Password2!",
+      "tenants": ["kimberly-clark-corporation"],
+      "description": "User 2 - Kimberly Clark access"
+    },
+    {
+      "email": "user3@fourkites.com",
+      "password": "Password3!",
+      "tenants": ["shipperapi", "carrierapi"],
+      "description": "User 3 - API access"
+    }
+  ],
+  "environment": "staging",
+  "keycloak_admin": "admin",
+  "keycloak_password": "kli38sdjHhjbsdfhbJwGsdf5sNwq"
+}
