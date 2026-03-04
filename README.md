@@ -1,6 +1,6 @@
 ## Project Overview
 
-JMeter-based stress testing framework for the YMS (Yard Management System) Dashboard Service. Tests multiple API endpoints across different tenants, simulating real-world load patterns for performance validation.
+JMeter based stress testing framework for the YMS (Yard Management System) Dashboard Service. Tests multiple API endpoints across different tenants, simulating real-world load patterns for performance validation.
 
 ## Architecture
 
